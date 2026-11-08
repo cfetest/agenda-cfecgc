@@ -1,10 +1,10 @@
-# Publie les modifications de ce dossier sur GitHub (depot CCFFEEtest/agenda-cfecgc).
+# Publie les modifications de ce dossier sur GitHub (depot cfetest/agenda-cfecgc).
 # Le site est ensuite redeploye automatiquement par GitHub Actions.
 # Usage : .\publier.ps1 ["message"]   ou double-clic sur publier.cmd
 param([string]$Message = "Mise a jour de l'agenda")
 
 Set-Location $PSScriptRoot
-$repo = 'https://github.com/CCFFEEtest/agenda-cfecgc.git'
+$repo = 'https://github.com/cfetest/agenda-cfecgc.git'
 
 $git = (Get-Command git -ErrorAction SilentlyContinue).Source
 if (-not $git) {
@@ -19,8 +19,8 @@ function G { & $git @args; if ($LASTEXITCODE -ne 0) { Write-Host "ERREUR : git $
 if (-not (Test-Path .git)) {
     G init -q
     G remote add origin $repo
-    G config user.name 'CCFFEEtest'
-    G config user.email 'CCFFEEtest@users.noreply.github.com'
+    G config user.name 'cfetest'
+    G config user.email 'cfetest@users.noreply.github.com'
     G fetch -q origin main
     G checkout -q -B main
     G reset -q origin/main
@@ -46,7 +46,7 @@ if ($remote) {
 }
 G push -q -u origin $branch
 if ($branch -eq 'main') {
-    Write-Host 'Publie. Le site sera a jour dans 2 a 3 minutes : https://ccffeetest.github.io/agenda-cfecgc/'
+    Write-Host 'Publie. Le site sera a jour dans 2 a 3 minutes : https://cfetest.github.io/agenda-cfecgc/'
 } else {
     Write-Host "Branche $branch envoyee sur GitHub. Le site en ligne n'a PAS change (il suit la branche main)."
 }

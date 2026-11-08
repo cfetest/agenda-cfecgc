@@ -39,7 +39,7 @@ jobs:
             done
           done
           # Heure (UTC, secondes) de la derniere publication, ecrite dans stamp.txt par le job build.
-          last=$(curl -fsL "https://ccffeetest.github.io/agenda-cfecgc/stamp.txt?x=$now" | tr -dc 0-9)
+          last=$(curl -fsL "https://cfetest.github.io/agenda-cfecgc/stamp.txt?x=$now" | tr -dc 0-9)
           last=${last:-0}
           echo "Dernier creneau : $(TZ=Europe/Paris date -d @$slot '+%d/%m %Hh%M') ; derniere publication : $(TZ=Europe/Paris date -d @$last '+%d/%m %Hh%M')"
           if [ "$last" -lt "$slot" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "run=false" >> "$GITHUB_OUTPUT"; echo "Deja a jour : rien a faire"; fi
