@@ -1,38 +1,58 @@
 [
   {
     "t": "Venez échanger avec Thierry Chatelier (élections CAP/CCP)",
-    "d": "2026-11-12", "h": "11h30 - 12h30", "g": "Orange Bridge ou Teams",
-    "x": "Projet ACE, pouvoir d'achat, infras, élections CAP/CCP de décembre 2026. Orange Bridge, salle O.35 GARE (RDC haut), ou via Teams.",
-    "u": ""
+    "u": "",
+    "d": "2026-11-12",
+    "h": "11h30 - 12h30",
+    "g": "Orange Bridge ou Teams",
+    "x": "Projet ACE, pouvoir d'achat, infras, élections CAP/CCP de décembre 2026. Orange Bridge, salle O.35 GARE (RDC haut), ou via Teams."
   },
   {
     "t": "Webinaire : Transformations et réorganisations, quels leviers pour les représentants du personnel ?",
-    "d": "2026-11-17", "h": "09h30 - 11h00", "g": "Webinaire URIF",
-    "x": "Organisé par l'Union Régionale CFE-CGC Île-de-France, animé par Vincent Pierre. Inscription : urif.partenaires@cfecgc.fr",
-    "u": "mailto:urif.partenaires@cfecgc.fr"
-  },
-  {
-    "t": "Formation CRAMIF : S'affirmer en entreprise sans se mettre en danger",
-    "d": "2026-11-20", "h": "09h00 - 17h00", "g": "Formation URIF",
-    "x": "Animée par Frédéric Kamowski. URIF, 63 rue du Rocher, 75008 Paris. Inscription : urif.partenaires@cfecgc.fr",
-    "u": "mailto:urif.partenaires@cfecgc.fr"
-  },
-  {
-    "t": "Be SOVEREIGN : Sébastien Crozier modère l'arbitrage « coût vs résilience »",
-    "d": "2026-11-23", "h": "10h15 - 10h45", "g": "",
-    "x": "Salon B2B résilience et souveraineté numérique, Pullman Paris Montparnasse. Arbitrage 1 : êtes-vous prêt à payer le prix de votre résilience ? Accès au salon gratuit (PASS EXPO).",
-    "u": ""
-  },
-  {
-    "t": "Be SOVEREIGN : table ronde « gouverner sa souveraineté numérique » avec Sébastien Crozier",
-    "d": "2026-11-23", "h": "15h30 - 16h10", "g": "",
-    "x": "Salon B2B résilience et souveraineté numérique, Pullman Paris Montparnasse. Table ronde 4 : comment ne pas perdre le cap ? Accès au salon gratuit (PASS EXPO).",
-    "u": ""
+    "u": "",
+    "d": "2026-11-17",
+    "h": "09h30 - 11h00",
+    "g": "Webinaire URIF",
+    "x": "Organisé par l'Union Régionale CFE-CGC Île-de-France, animé par Vincent Pierre. Inscription : urif.partenaires@cfecgc.fr"
   },
   {
     "t": "Qui pense à votre place ? Ce que l'IA change dans notre façon de juger, de décider, de créer",
-    "d": "2026-11-19", "h": "18h00 - 19h30", "g": "Orange Bridge",
-    "x": "Table ronde CFE-CGC Orange avec Impact AI et Hu-Ma-Shift. Introduction par Sébastien Crozier ; avec Axelle Arquié (CEPII), Roxana Rujina (Impact AI), Mohamed Senhadji (Hu-Ma-Shift), animation Thierry Taboy. Auditorium Orange Bridge, 111 quai du Président Roosevelt, 92130 Issy-les-Moulineaux. Suivi d'un cocktail. Entrée gratuite, places limitées, pièce d'identité obligatoire.",
-    "u": ""
+    "u": "",
+    "d": "2026-11-19",
+    "h": "18h00 - 19h30",
+    "g": "Orange Bridge",
+    "x": "Table ronde CFE-CGC Orange avec Impact AI et Hu-Ma-Shift. Introduction par Sébastien Crozier ; avec Axelle Arquié (CEPII), Roxana Rujina (Impact AI), Mohamed Senhadji (Hu-Ma-Shift), animation Thierry Taboy. Auditorium Orange Bridge, 111 quai du Président Roosevelt, 92130 Issy-les-Moulineaux. Suivi d'un cocktail. Entrée gratuite, places limitées, pièce d'identité obligatoire."
+  },
+  {
+    "t": "Formation CRAMIF : S'affirmer en entreprise sans se mettre en danger",
+    "u": "",
+    "d": "2026-11-20",
+    "h": "09h00 - 17h00",
+    "g": "Formation URIF",
+    "x": "Animée par Frédéric Kamowski. URIF, 63 rue du Rocher, 75008 Paris. Inscription : urif.partenaires@cfecgc.fr"
+  },
+  {
+    "t": "Be SOVEREIGN : Sébastien Crozier modère l'arbitrage « coût vs résilience »",
+    "u": "",
+    "d": "2026-11-23",
+    "h": "10h15 - 10h45",
+    "g": "",
+    "x": "Salon B2B résilience et souveraineté numérique, Pullman Paris Montparnasse. Arbitrage 1 : êtes-vous prêt à payer le prix de votre résilience ? Accès au salon gratuit (PASS EXPO)."
+  },
+  {
+    "t": "Be SOVEREIGN : table ronde « gouverner sa souveraineté numérique » avec Sébastien Crozier",
+    "u": "",
+    "d": "2026-11-23",
+    "h": "15h30 - 16h10",
+    "g": "",
+    "x": "Salon B2B résilience et souveraineté numérique, Pullman Paris Montparnasse. Table ronde 4 : comment ne pas perdre le cap ? Accès au salon gratuit (PASS EXPO)."
+  },
+  {
+    "t": "RV DE TEST A SUPPRIMER",
+    "u": "",
+    "d": "2026-12-24",
+    "h": "09h00 - 14h00",
+    "g": "Arceuil batiment B",
+    "x": "TEST"
   }
 ]
