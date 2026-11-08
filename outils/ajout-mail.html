@@ -605,7 +605,8 @@
   // Lieu et mode : MEME algorithme que fetch-agenda.ps1 (SiteOf, Locate, Geo, Mode), avec les memes
   // fichiers lieux-orange.csv et departements.csv lus sur GitHub, et le meme geocodage
   // (api-adresse.data.gouv.fr) pour une adresse postale, une ville ou un departement.
-  var RAWBASE = 'https://raw.githubusercontent.com/cfetest/agenda-cfecgc/main/';
+  // en local (serveur de test) : fichiers du dossier de travail ; en ligne : version publiee sur GitHub
+  var RAWBASE = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? '../' : 'https://raw.githubusercontent.com/cfetest/agenda-cfecgc/main/';
   var SITE_KEYS = [], DEPTS = {}, LIEUX = 'chargement';
   function normA(s) { return fold(s).replace(/[^a-z0-9]+/g, ' ').trim(); }   // Norm
   function normLoc(s) {                                                         // NormLoc
@@ -639,15 +640,17 @@
       LIEUX = 'ok'; renderSimu();
     }).catch(function () { LIEUX = 'erreur'; renderSimu(); });
   }
-  // SiteOf : variante "forte" seule, ou variante "de contexte" si le titre commence par elle,
-  // si la ville du site est citee, ou apres site / campus / batiment / immeuble / tour
+  // SiteOf : variante "forte" seule, ou variante "de contexte" si le titre commence par elle
+  // ("X :" ou "[X]"), si la ville du site est citee (sauf quand la variante EST la ville), ou apres
+  // site / campus / batiment / immeuble / tour. MEME algorithme que SiteOf dans fetch-agenda.ps1.
   function siteOf(a) {
     var txt = normLoc(a.t + ' | ' + a.g + ' | ' + a.x);
     var m = /^\s*([^:]{2,60}?)\s*:/.exec(a.t), pre = m ? normLoc(m[1]) : '';
+    var b = /^\s*\[([^\]]{2,40})\]/.exec(a.t), bra = b ? normLoc(b[1]) : '';
     for (var i = 0; i < SITE_KEYS.length; i++) {
       var x = SITE_KEYS[i];
       if (txt.indexOf(x.K) < 0) continue;
-      if (!x.Weak || pre === x.K || txt.indexOf(x.S.villeKey) >= 0 ||
+      if (!x.Weak || pre === x.K || bra === x.K || (x.K !== x.S.villeKey && txt.indexOf(x.S.villeKey) >= 0) ||
           new RegExp(' (site|campus|batiment|immeuble|tour)( d| de| du| de la| des)?' + reEsc(x.K)).test(txt)) return x.S;
     }
     return null;

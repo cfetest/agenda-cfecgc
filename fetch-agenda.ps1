@@ -114,9 +114,11 @@ function ReadCsv($name) {
 # variantes de nom par site. Comparaison sur texte normalise (NormLoc) : sans accents ni majuscules,
 # tirets / apostrophes / ponctuation = espace, oe/ae, pluriel (s ou x final ignore), St = Saint,
 # 1er = Ier, mots entiers seulement. Variantes "fortes" : suffisent seules. Variantes "de contexte"
-# (noms courants : Patio, Village, Voltaire...) : seulement si le titre commence par elles
-# ("Le Patio : Accueil cafe"), si la ville du site figure dans le texte, ou apres site/campus/
+# (noms courants : Patio, Village, Voltaire... ; nom de la ville pour un site seul dans sa ville) :
+# seulement si le titre commence par elles ("Le Patio : Accueil cafe", "[Brest] Accueil cafe"), si
+# la ville du site figure dans le texte (sauf quand la variante EST la ville), ou apres site/campus/
 # batiment/immeuble/tour. Les variantes les plus longues sont testees en premier.
+# MEME algorithme dans outils/ajout-mail.html (normLoc, siteOf) : modifier les deux ensemble.
 function NormLoc($s) {
   $t = ([string]$s).Replace([string][char]0x153, 'oe').Replace([string][char]0x152, 'OE').Replace([string][char]0xE6, 'ae')
   $w = foreach ($x in ((Norm $t) -split ' ')) {
@@ -141,9 +143,11 @@ function SiteOf($e) {
   $txt = NormLoc "$($e.Title) | $($e.Tag) | $($e.Extract)"
   $m = [regex]::Match([string]$e.Title, '^\s*([^:]{2,60}?)\s*:')
   $pre = if ($m.Success) { NormLoc $m.Groups[1].Value } else { '' }
+  $m = [regex]::Match([string]$e.Title, '^\s*\[([^\]]{2,40})\]')
+  $bra = if ($m.Success) { NormLoc $m.Groups[1].Value } else { '' }
   foreach ($x in $siteKeys) {
     if (-not $txt.Contains($x.K)) { continue }
-    if (-not $x.Weak -or $pre -eq $x.K -or $txt.Contains($x.S.VilleKey) -or
+    if (-not $x.Weak -or $pre -eq $x.K -or $bra -eq $x.K -or ($x.K -ne $x.S.VilleKey -and $txt.Contains($x.S.VilleKey)) -or
         $txt -match (' (site|campus|batiment|immeuble|tour)( d| de| du| de la| des)?' + [regex]::Escape($x.K))) { return $x.S }
   }
   return $null
