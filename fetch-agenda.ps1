@@ -110,7 +110,44 @@ function ReadCsv($name) {
   if (Test-Path $p) { return [IO.File]::ReadAllText($p, [Text.Encoding]::UTF8) | ConvertFrom-Csv -Delimiter ';' }
   return @()
 }
-$sites = @(ReadCsv 'lieux-orange.csv')
+# Sites connus (lieux-orange.csv) : coordonnees deja calculees (pas d'appel reseau), plusieurs
+# variantes de nom par site. Comparaison sur texte normalise (NormLoc) : sans accents ni majuscules,
+# tirets / apostrophes / ponctuation = espace, oe/ae, pluriel (s ou x final ignore), St = Saint,
+# 1er = Ier, mots entiers seulement. Variantes "fortes" : suffisent seules. Variantes "de contexte"
+# (noms courants : Patio, Village, Voltaire...) : seulement si le titre commence par elles
+# ("Le Patio : Accueil cafe"), si la ville du site figure dans le texte, ou apres site/campus/
+# batiment/immeuble/tour. Les variantes les plus longues sont testees en premier.
+function NormLoc($s) {
+  $t = ([string]$s).Replace([string][char]0x153, 'oe').Replace([string][char]0x152, 'OE').Replace([string][char]0xE6, 'ae')
+  $w = foreach ($x in ((Norm $t) -split ' ')) {
+    if ($x -eq 'st') { 'saint' } elseif ($x -eq 'ste') { 'sainte' } elseif ($x -eq '1er') { 'ier' }
+    elseif ($x.Length -gt 3 -and $x -match '[sx]$') { $x.Substring(0, $x.Length - 1) } else { $x }
+  }
+  return ' ' + (@($w) -join ' ') + ' '
+}
+$siteKeys = New-Object System.Collections.ArrayList
+foreach ($s in @(ReadCsv 'lieux-orange.csv')) {
+  if (-not $s.lat) { continue }
+  $s | Add-Member -NotePropertyName VilleKey -NotePropertyValue (NormLoc $s.ville) -Force
+  foreach ($pair in @(@($s.variantes, $false), @($s.variantes_contexte, $true))) {
+    foreach ($v in ([string]$pair[0] -split '\|')) {
+      $k = (NormLoc $v).Trim()
+      if ($k) { [void]$siteKeys.Add([pscustomobject]@{ K = " $k "; Weak = $pair[1]; S = $s }) }
+    }
+  }
+}
+$siteKeys = @($siteKeys | Sort-Object { $_.K.Length } -Descending)
+function SiteOf($e) {
+  $txt = NormLoc "$($e.Title) | $($e.Tag) | $($e.Extract)"
+  $m = [regex]::Match([string]$e.Title, '^\s*([^:]{2,60}?)\s*:')
+  $pre = if ($m.Success) { NormLoc $m.Groups[1].Value } else { '' }
+  foreach ($x in $siteKeys) {
+    if (-not $txt.Contains($x.K)) { continue }
+    if (-not $x.Weak -or $pre -eq $x.K -or $txt.Contains($x.S.VilleKey) -or
+        $txt -match (' (site|campus|batiment|immeuble|tour)( d| de| du| de la| des)?' + [regex]::Escape($x.K))) { return $x.S }
+  }
+  return $null
+}
 $depts = @{}
 foreach ($r in (ReadCsv 'departements.csv')) { $depts[(Norm $r.departement)] = $r.'chef-lieu' }
 $geoCache = @{}
@@ -126,7 +163,9 @@ function Geo {
     if ($f) {
       $town = [string]$f.properties.city
       # Ville : le nom trouve doit figurer dans la recherche (evite "Rendez-vous de l'epargne" -> une commune au hasard)
-      $ok = if ($City) { (' ' + (Norm $q) + ' ').Contains(' ' + (Norm $town) + ' ') } else { $f.properties.score -ge 0.5 }
+      # ... ou la commune commence par la recherche ("Eragny" -> "Eragny-sur-Oise")
+      $nq = Norm $q; $nt = Norm $town
+      $ok = if ($City) { (' ' + $nq + ' ').Contains(' ' + $nt + ' ') -or ($nq.Length -ge 4 -and $nt.StartsWith("$nq ")) } else { $f.properties.score -ge 0.5 }
       # Dep : numero du departement (debut de "context", ex. "45, Loiret, Centre-Val de Loire")
       $dep = ([string]$f.properties.context -split ',')[0].Trim()
       if ($ok) { $res = [pscustomobject]@{ Lat = [math]::Round($f.geometry.coordinates[1], 5); Lon = [math]::Round($f.geometry.coordinates[0], 5); City = $town; Dep = $dep } }
@@ -159,8 +198,10 @@ function Found($label, $g) {
 }
 function Locate($e) {
   $txt = "$($e.Title) | $($e.Tag) | $($e.Extract)"
-  foreach ($s in $sites) {
-    if ($txt -match [regex]::Escape($s.motif)) { $g = Geo $s.recherche; if ($g) { return (Found $s.nom $g) } }
+  $s = SiteOf $e
+  if ($s) {
+    $inv = [Globalization.CultureInfo]::InvariantCulture
+    return (Found $s.libelle ([pscustomobject]@{ Lat = [double]::Parse($s.lat, $inv); Lon = [double]::Parse($s.lon, $inv); Dep = $s.dep }))
   }
   $m = [regex]::Match($txt, $reAddr, 'IgnoreCase')
   if ($m.Success) { $g = Geo $m.Value; if ($g) { return (Found $m.Value $g) } }

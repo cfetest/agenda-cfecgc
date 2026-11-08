@@ -1,4 +1,109 @@
-motif;nom;recherche
-Orange Bridge;Orange Bridge (Issy-les-Moulineaux);Issy-les-Moulineaux
-Interives;Orange Interives (Orléans);Orléans
-Pullman Paris Montparnasse;Pullman Paris Montparnasse;19 rue du Commandant René Mouchotte 75014 Paris
+id;libelle;ville;dep;lat;lon;precision;variantes;variantes_contexte;adresse;cp;fiabilite
+ORA-001;Orange Bridge (Issy-les-Moulineaux);Issy-les-Moulineaux;92;48.83009;2.26159;housenumber;Orange Bridge|Bridge;;111 quai du Président Roosevelt;92130;Élevée
+ORA-002;Orange Gardens (Châtillon);Châtillon;92;48.80463;2.29727;street;Orange Gardens|Gardens|Orange Châtillon;;44 avenue de la République;92320;Élevée
+ORA-003;Orange Village (Arcueil);Arcueil;94;48.81064;2.32703;housenumber;Orange Village|Nouveau Village|Orange Arcueil;Village;1 avenue du Président Nelson Mandela;94110;Élevée
+ORA-127;Orange Marguerite Lagrange (Arcueil);Arcueil;94;48.81257;2.32879;housenumber;Orange Marguerite Lagrange;Marguerite Lagrange;2 rue Marguerite Lagrange;94110;Élevée
+ORA-004;Orange Stadium (Saint-Denis);Saint-Denis;93;48.91925;2.36315;housenumber;Orange Stadium|Stadium;La Plaine|Droits de l'Homme;1 place des Droits de l'Homme;93210;Élevée
+ORA-005;Orange Philippe Auguste (Paris 11e);Paris;75;48.85202;2.39389;housenumber;Orange Philippe Auguste|Philippe Auguste;;42 avenue Philippe Auguste;75011;Élevée
+ORA-006;Orange Pastourelle (Paris 3e);Paris;75;48.86182;2.36109;housenumber;Orange Pastourelle|Pastourelle;;3 rue Pastourelle;75003;Moyenne
+ORA-007;Orange Digital Center (Saint-Ouen-sur-Seine);Saint-Ouen-sur-Seine;93;48.91394;2.33041;housenumber;Orange Saint-Ouen;Orange Digital Center|Frida Kahlo;7 rue Frida Kahlo;93400;Élevée
+ORA-008;Orange Résonance (Bagneux);Bagneux;92;48.80426;2.32478;housenumber;Orange Village Résonance|Orange Résonance|Orange Bagneux;Résonance;42 avenue Aristide Briand;92220;Moyenne
+ORA-009;Orange Native (Montigny-le-Bretonneux);Montigny-le-Bretonneux;78;48.78617;2.04638;housenumber;Orange Native|Montigny Native;Native;2 avenue de la Gare;78180;Moyenne
+ORA-010;Orange Les Villages 4 (Nanterre);Nanterre;92;48.89318;2.23087;street;Les Villages 4|Villages 4;Ellipse;52 place de l'Ellipse;92000;Élevée
+ORA-011;Orange Les Villages 6 (Puteaux);Puteaux;92;48.89269;2.23129;housenumber;Les Villages 6|Villages 6;Place Ronde;31 place Ronde;92800;Élevée
+ORA-012;Orange Cyberdefense Bellini (Puteaux);Puteaux;92;48.88653;2.24931;housenumber;Orange Cyberdefense Bellini;Bellini;5 rue Bellini;92800;Moyenne
+ORA-013;Orange Atlantis (Massy);Massy;91;48.73002;2.26881;housenumber;Orange Atlantis|Massy Atlantis;Atlantis;17 rue Victor Basch;91300;Élevée
+ORA-014;Orange Business Villejust (Villejust);Villejust;91;48.6829;2.20723;housenumber;Orange Villejust|Orange Business Villejust;Courtabœuf;32 avenue de l'Océanie;91140;Élevée
+ORA-016;Orange Cergy Degas (Cergy);Cergy;95;49.04446;2.0743;housenumber;Cergy Degas|Orange Cergy;Degas;16 rue Francis Combe;95000;Moyenne
+ORA-017;Orange Éragny (Éragny);Éragny;95;49.02939;2.10154;housenumber;Orange Éragny|Éragny;Léo Lagrange;2 rue Léo Lagrange;95610;Moyenne
+ORA-018;Orange Antares (Chessy);Chessy;77;48.85608;2.77151;housenumber;Orange Antares;Antares;3 rue de la Galmy;77700;Moyenne
+ORA-019;Orange Mont d'Est (Noisy-le-Grand);Noisy-le-Grand;93;48.84133;2.54281;housenumber;Mont d'Est|Orange Noisy;;8 boulevard du Mont d'Est;93160;Moyenne
+ORA-020;Orange Ambreville (Villabé);Villabé;91;48.59129;2.46325;housenumber;Ambreville|Orange Villabé;;69 chemin d'Ambreville;91100;Moyenne
+ORA-021;Orange Viry-Châtillon (Viry-Châtillon);Viry-Châtillon;91;48.6766;2.36155;housenumber;Orange Viry-Châtillon|Orange Viry;;33 rue du Bellay;91170;Moyenne
+ORA-022;Orange Archives (Paris 3e);Paris;75;48.86244;2.35943;housenumber;Orange Archives|Paris Archives|rue des Archives;Archives;67 rue des Archives;75003;Élevée
+ORA-023;Orange Jemmapes (Paris 10e);Paris;75;48.87971;2.36839;housenumber;Orange Jemmapes|Jemmapes;;186 quai de Jemmapes;75010;Élevée
+ORA-024;Orange Auteuil-Jasmin (Paris 16e);Paris;75;48.85189;2.26661;housenumber;Auteuil-Jasmin|Orange Jasmin;Jasmin;21 rue Jasmin;75016;Moyenne
+ORA-028;Orange Cœur Défense (Courbevoie);Courbevoie;92;48.89085;2.24342;housenumber;Cœur Défense;;110 esplanade du Général de Gaulle;92400;Élevée
+ORA-029;Orange Business Saint-Amand (Paris 15e);Paris;75;48.83536;2.30732;housenumber;Orange Saint-Amand;Saint-Amand;10 rue Saint-Amand;75015;Élevée
+ORA-030;Orange Business Marcadet (Paris 18e);Paris;75;48.89135;2.34146;housenumber;Orange Marcadet;Marcadet;114 rue Marcadet;75018;Élevée
+ORA-031;Orange Grand Stade (Villeneuve-d'Ascq);Villeneuve-d'Ascq;59;50.61216;3.13244;housenumber;Orange Grand Stade|Grand Stade|Stade Pierre Mauroy|Orange Lille;;245 boulevard de Tournai;59650;Élevée
+ORA-032;Orange La Mare (Villeneuve-d'Ascq);Villeneuve-d'Ascq;59;50.65007;3.12322;housenumber;Orange La Mare;La Mare;2 chemin de la Mare;59650;Moyenne
+ORA-033;Orange Cimaise (Villeneuve-d'Ascq);Villeneuve-d'Ascq;59;50.64644;3.14855;housenumber;Orange Cimaise;Cimaise;73 rue de la Cimaise;59650;Moyenne
+ORA-036;Orange Business Amiens (Amiens);Amiens;80;49.89121;2.31169;housenumber;Orange Business Amiens;;90 rue de la Vallée;80000;Élevée
+ORA-037;Orange Amiens Frédéric Petit (Amiens);Amiens;80;49.89306;2.28742;housenumber;Orange Amiens;Frédéric Petit;28 rue Frédéric Petit;80000;Moyenne
+ORA-038;Orange Deux Rives (Nancy);Nancy;54;48.68857;6.19893;housenumber;Orange Deux Rives|Nancy Deux Rives|Orange Nancy;Deux Rives;57 rue du Maréchal Victor duc de Bellune;54000;Élevée
+ORA-039;Orange Crystal Park (Schiltigheim);Schiltigheim;67;48.61032;7.71267;housenumber;Crystal Park|Crystal Parc;;1 avenue de l'Europe;67300;Élevée
+ORA-040;Orange Wodli (Strasbourg);Strasbourg;67;48.57983;7.76145;ville;Orange Wodli|Wodli;;;67000;Moyenne
+ORA-041;Orange Broglie (Strasbourg);Strasbourg;67;48.57983;7.76145;ville;Orange Broglie;Broglie;;67000;Moyenne
+ORA-043;Orange Metz Sablons (Metz);Metz;57;49.10233;6.22532;housenumber;Metz Sablons|Orange Metz;Sablons;4 rue Thomas Edison;57070;Moyenne
+ORA-044;Orange Business Épinal (Épinal);Épinal;88;48.18732;6.44531;housenumber;Orange Business Épinal|Orange Épinal;Dogneville;70 quai de Dogneville;88000;Élevée
+ORA-046;Orange Dijon Joliet (Dijon);Dijon;21;47.31954;5.02948;housenumber;Orange Dijon|Dijon Joliet;Joliet;7 rue Joliet;21000;Élevée
+ORA-047;Orange Dijon Cracovie (Dijon);Dijon;21;47.33892;5.06415;housenumber;Dijon Cracovie;Cracovie;4 rue de Cracovie;21000;Moyenne
+ORA-048;Orange Business Belfort (Belfort);Belfort;90;47.64547;6.84351;housenumber;Orange Belfort|Orange Business Belfort;Broglie;3 rue Maurice et Louis ducs de Broglie;90000;Élevée
+ORA-049;Orange Interives (Fleury-les-Aubrais);Fleury-les-Aubrais;45;47.92463;1.90149;housenumber;Orange Interives|Interives|Rives d'Orléans|Orange Orléans;;2 rue Simone Veil;45400;Élevée
+ORA-050;Orange Business Tours (Tours);Tours;37;47.36405;0.68238;housenumber;Orange Tours|Tours Deux-Lions;Deux-Lions;21 avenue Marcel Dassault;37200;Élevée
+ORA-051;Orange Estuaire (Nantes);Nantes;44;47.25121;-1.52528;housenumber;Orange Estuaire|New Nantes|Orange Nantes;Estuaire;1 avenue de la Gare de Saint-Joseph;44300;Élevée
+ORA-052;Orange Martin Luther King (Nantes);Nantes;44;47.25624;-1.55501;housenumber;Orange Martin Luther King;Martin Luther King;13 boulevard Martin Luther King;44300;Élevée
+ORA-053;Orange Moulin de la Garde (Nantes);Nantes;44;47.2608;-1.50934;housenumber;Moulin de la Garde;;5 rue du Moulin de la Garde;44300;Élevée
+ORA-054;Orange Business Le Mans (Le Mans);Le Mans;72;48.01946;0.16186;housenumber;Orange Le Mans|Orange Business Le Mans;Laennec;3 avenue René Laennec;72000;Élevée
+ORA-055;Orange Courboulay (Le Mans);Le Mans;72;48.00347;0.19127;street;Orange Courboulay;Courboulay;rue Paul Courboulay;72000;Moyenne
+ORA-056;Orange Orgemont (Angers);Angers;49;47.44954;-0.5444;housenumber;Orgemont|Orange Angers;;110 rue du Château d'Orgemont;49000;Moyenne
+ORA-057;Orange Atalante (Cesson-Sévigné);Cesson-Sévigné;35;48.1271;-1.62618;housenumber;Orange Atalante|Atalante|Orange Cesson;;2 avenue de Belle Fontaine;35510;Élevée
+ORA-058;Orange Les Glénan (Cesson-Sévigné);Cesson-Sévigné;35;48.13059;-1.62513;housenumber;Orange Islands|Orange Glénan;Glénan|Chêne Germain;9 rue du Chêne Germain;35510;Moyenne
+ORA-059;Orange Clos Courtel (Cesson-Sévigné);Cesson-Sévigné;35;48.12358;-1.62803;street;Clos Courtel;;4 rue du Clos Courtel;35510;Élevée
+ORA-060;Orange Rennes Châtillon (Rennes);Rennes;35;48.1109;-1.68365;ville;Rennes Châtillon;Châtillon;190 rue de Châtillon;35200;Élevée
+ORA-061;Orange Rennes Albert Ier (Rennes);Rennes;35;48.08909;-1.67311;housenumber;Orange Rennes;Albert Ier;125 boulevard Albert Ier;35200;Moyenne
+ORA-062;Orange Lannion (Lannion);Lannion;22;48.75362;-3.45905;housenumber;Orange Labs Lannion|Orange Lannion|Pierre Marzin;;2 avenue Pierre Marzin;22300;Élevée
+ORA-063;Orange Lannion Branly (Lannion);Lannion;22;48.75796;-3.4506;street;Orange Branly;Branly;rue Édouard Branly;22300;Moyenne
+ORA-064;Orange Brest (Brest);Brest;29;48.42232;-4.46758;housenumber;Orange Brest;Gaston Esnault;50 rue Gaston Esnault;29200;Élevée
+ORA-065;Orange Caen Coutures (Caen);Caen;14;49.18066;-0.39129;housenumber;Orange Caen|Caen Coutures;Coutures;38 rue des Coutures;14000;Élevée
+ORA-067;Orange Belcier (Bordeaux);Bordeaux;33;44.82128;-0.55195;street;Orange Belcier|Belcier|Orange Bordeaux;;rue d'Armagnac;33800;Élevée
+ORA-068;Orange Business Château d'Eau (Bordeaux);Bordeaux;33;44.84055;-0.58324;housenumber;Orange Château d'Eau;Château d'Eau;20 rue du Château d'Eau;33000;Élevée
+ORA-069;Orange Pichey (Pessac);Pessac;33;44.77879;-0.64996;street;Pichey|Orange Pessac Pichey;;23 rue Thomas Edison;33600;Élevée
+ORA-070;Orange Pessac (Pessac);Pessac;33;44.78031;-0.6512;housenumber;Orange Pessac;Thomas Edison;1 rue Thomas Edison;33600;Élevée
+ORA-071;Orange Eysines (Eysines);Eysines;33;44.88811;-0.63711;housenumber;Orange Eysines;Pauillac;33 route de Pauillac;33320;Élevée
+ORA-073;Orange Beaublanc (Limoges);Limoges;87;45.85616;1.22125;ville;Orange Beaublanc|Beaublanc|Orange Limoges;;25 rue Édouard Michaud;87000;Élevée
+ORA-074;Orange Boulazac (Boulazac Isle Manoire);Boulazac Isle Manoire;24;45.18278;0.77936;street;Orange Boulazac|Boulazac;;avenue Henri Deluc;24750;Moyenne
+ORA-075;Orange Business Niort (Bessines);Bessines;79;46.29887;-0.49405;housenumber;Orange Niort|Orange Bessines;Angélique;12 rue de l'Angélique;79000;Élevée
+ORA-076;Orange Business Pau (Pau);Pau;64;43.31827;-0.3591;housenumber;Orange Pau;Ronsard;23 rue Ronsard;64000;Élevée
+ORA-077;Orange Poitiers (Poitiers);Poitiers;86;46.58034;0.37744;housenumber;Orange Poitiers;Salvador Allende;30 rue Salvador Allende;86000;Moyenne
+ORA-078;Orange Tolosa (Balma);Balma;31;43.62312;1.48863;housenumber;Orange Tolosa|Campus Tolosa|Tolosa|Orange Balma|Balma Saint-Jean;;60 rue Saint-Jean;31130;Élevée
+ORA-079;Orange Business Frères Peugeot (Balma);Balma;31;43.62567;1.48756;street;Orange Frères Peugeot;Frères Peugeot;16 rue des Frères Peugeot;31130;Élevée
+ORA-080;Orange Garona (Blagnac);Blagnac;31;43.63124;1.37942;housenumber;Orange Garona|Campus Garona|Garona|Orange Blagnac;;3 rue Dieudonné Costes;31700;Moyenne
+ORA-081;Orange Aéropôle (Blagnac);Blagnac;31;43.63639;1.37616;housenumber;Aéropôle 3|Orange Aéropôle;Aéropôle|Albert Durand;5 avenue Albert Durand;31700;Élevée
+ORA-082;Orange Cyberdefense EPOQ (Toulouse);Toulouse;31;43.60352;1.40434;housenumber;Orange Cyberdefense Toulouse;EPOQ|Toec;84 voie du Toec;31300;Moyenne
+ORA-083;Orange Le Patio (Montpellier);Montpellier;34;43.61499;3.90813;housenumber;Orange Le Patio|Campus Le Patio|Orange Montpellier;Le Patio|Patio;895 rue de la Vieille Poste;34000;Élevée
+ORA-084;Orange Lumière (Lyon 3e);Lyon;69;45.75457;4.8634;housenumber;Orange Lumière|Campus Lumière|Lyon Lumière|Orange Lyon;Lumière|Lacassagne;131 avenue Félix Faure;69003;Élevée
+ORA-085;Orange Sky 56 (Lyon 3e);Lyon;69;45.75355;4.86138;housenumber;SKY56|Sky 56|Orange Sky 56;;18 rue Général Mouton-Duvernet;69003;Élevée
+ORA-086;Orange Gailleton (Lyon 2e);Lyon;69;45.75539;4.83501;housenumber;Orange Gailleton;Gailleton;13 quai Docteur Gailleton;69002;Élevée
+ORA-087;Orange Business Cité internationale (Lyon 6e);Lyon;69;45.78512;4.85551;housenumber;;Cité internationale;45 quai Charles de Gaulle;69006;Élevée
+ORA-088;Orange Business Saint-Priest (Saint-Priest);Saint-Priest;69;45.7117;4.93414;housenumber;Orange Saint-Priest;Borodine;50 allée Alexandre Borodine;69800;Élevée
+ORA-089;Orange Campus de Meylan (Meylan);Meylan;38;45.2082;5.78983;housenumber;Campus de Meylan|Orange Meylan;Vieux Chêne;22 chemin du Vieux Chêne;38240;Élevée
+ORA-090;Orange Business Chanrion (Grenoble);Grenoble;38;45.18824;5.73788;housenumber;Orange Chanrion;Chanrion;39 rue Joseph Chanrion;38000;Élevée
+ORA-091;Orange Business La Fabrique (Grenoble);Grenoble;38;45.1913;5.73336;housenumber;La Fabrique Orange Business;Servan|La Fabrique;29 rue Servan;38000;Élevée
+ORA-092;Orange Business Voltaire (Grenoble);Grenoble;38;45.19032;5.73153;housenumber;Orange Grenoble Voltaire;Voltaire;8 rue Voltaire;38000;Élevée
+ORA-093;Orange Business Beaux-Tailleurs (Grenoble);Grenoble;38;45.19231;5.73294;housenumber;Orange Beaux-Tailleurs;Beaux-Tailleurs;7 rue des Beaux Tailleurs;38000;Élevée
+ORA-094;Orange Business Mangin (Grenoble);Grenoble;38;45.16852;5.7149;housenumber;Orange Mangin;Mangin;73 rue Général Mangin;38100;Élevée
+ORA-095;Orange Business 4e Génie (Grenoble);Grenoble;38;45.18444;5.73033;street;Orange 4e Génie;4e Génie|4e Régiment du Génie;rue du 4e Régiment du Génie;38000;Moyenne
+ORA-096;Orange Business Montbonnot (Montbonnot-Saint-Martin);Montbonnot-Saint-Martin;38;45.21834;5.81151;housenumber;Orange Montbonnot;ZIRST|Lavoisier;195 rue Lavoisier;38330;Élevée
+ORA-097;Orange Business Valence (Valence);Valence;26;44.92267;4.88832;housenumber;Orange Valence;La Cécile;10 bis rue de la Cécile;26000;Élevée
+ORA-098;Orange Sophia Lérins (Biot);Biot;06;43.62348;7.0605;street;Sophia Lérins|Orange Sophia|Orange Sophia Antipolis;Pin Montard;450 route du Pin Montard;06410;Élevée
+ORA-099;Orange Saint-Mauront (Marseille 3e);Marseille;13;43.31605;5.37429;housenumber;Orange Saint-Mauront|Orange Marseille;Saint-Mauront|Félix Pyat;93 rue Félix Pyat;13003;Élevée
+ORA-100;Orange Business Anthoine (Marseille 15e);Marseille;13;43.31673;5.36867;street;Orange Anthoine;Anthoine;10 rue d'Anthoine;13015;Élevée
+ORA-101;Orange Cyberdefense Eko Active (Marseille 3e);Marseille;13;43.3129;5.3687;housenumber;Eko Active;;174 boulevard de Paris;13003;Moyenne
+ORA-102;Orange Ranochietto (Ajaccio);Ajaccio;2A;41.93368;8.71532;ville;Ranochietto;Mezzavia;chemin de Ranochietto;20000;Moyenne
+ORA-103;Orange Diamant 2 (Ajaccio);Ajaccio;2A;41.91762;8.73488;street;Diamant 2|Orange Corse;Diamant;avenue du Docteur Barthel Ramaroni;20000;Moyenne
+ORA-104;Orange Ottavi (Ajaccio);Ajaccio;2A;41.92061;8.73634;housenumber;Orange Ottavi;Ottavi;2 rue Ottavi;20000;Moyenne
+ORA-105;Orange Montesoro (Bastia);Bastia;2B;42.67057;9.43004;street;Montesoro;;chemin d'Agliani;20600;Moyenne
+ORA-106;Orange Furiani (Furiani);Furiani;2B;42.65175;9.42717;ville;Orange Furiani;;rue Pierre Cahuzac;20600;Moyenne
+ORA-107;Orange Macchia Soprana (Porto-Vecchio);Porto-Vecchio;2A;41.58276;9.26394;ville;Macchia Soprana;;;20137;Moyenne
+ORA-108;Orange L'Île-Rousse (L'Île-Rousse);L'Île-Rousse;2B;42.6324;8.93662;ville;Orange L'Île-Rousse;;;20220;Moyenne
+ORA-109;Orange Réunion Le Chaudron (Saint-Denis, La Réunion);Saint-Denis;974;-20.89357;55.4931;housenumber;Orange Réunion|Orange Réunion Mayotte;Chaudron|Sainte-Clotilde;35 boulevard du Chaudron;97490;Élevée
+ORA-111;Orange Simpex (Baie-Mahault);Baie-Mahault;971;16.24517;-61.59489;ville;Simpex|Orange Guadeloupe;Moudong;;97122;Élevée
+ORA-112;Orange Jardins de la Jaille (Baie-Mahault);Baie-Mahault;971;16.24517;-61.59489;ville;Jardins de la Jaille|Destrellan Nord;La Jaille;;97122;Moyenne
+ORA-113;Orange Pavillon Sud (Baie-Mahault);Baie-Mahault;971;16.24517;-61.59489;ville;Destrellan Sud;Pavillon Sud|Destrellan;;97122;Moyenne
+ORA-114;Orange Caraïbe Moudong Sud (Baie-Mahault);Baie-Mahault;971;16.24517;-61.59489;ville;Moudong Sud|Orange Caraïbe;;;97122;Élevée
+ORA-115;Orange Houelbourg (Baie-Mahault);Baie-Mahault;971;16.24517;-61.59489;ville;Houelbourg;Jarry;;97122;Moyenne
+ORA-116;Orange Mangot Vulcin (Le Lamentin);Le Lamentin;972;14.63681;-60.99107;ville;Mangot Vulcin|Orange Martinique;OGC;;97232;Moyenne
+ORA-117;Orange Village Les Grives (Le Lamentin);Le Lamentin;972;14.63681;-60.99107;ville;Grives Orange Village|Orange Village Les Grives;Les Grives|Grives;;97232;Moyenne
+EXT-001;Pullman Paris Montparnasse;Paris;75;48.83855;2.32034;housenumber;Pullman Paris Montparnasse|Pullman Montparnasse;;19 rue du Commandant René Mouchotte;75014;Élevée
