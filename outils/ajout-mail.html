@@ -28,7 +28,26 @@
   header { background: var(--accent); color: #1c1c23; padding: 14px 16px; }
   header h1 { margin: 0; font-size: 20px; font-weight: 700; }
   header p { margin: 2px 0 0; font-size: 13px; }
-  main { max-width: 980px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+  main { max-width: 1440px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+         gap: 16px; align-items: start; }
+  .work { display: grid; gap: 16px; min-width: 0; }
+  /* Aide en ligne : colonne droite (1/3), fixe pendant le defilement */
+  aside { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; background: var(--card);
+          border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: var(--radius); padding: 4px 16px 14px; font-size: 14px; }
+  aside summary { font-weight: 700; font-size: 17px; padding: 10px 0 6px; list-style: none; pointer-events: none; }
+  @media (max-width: 1000px) { aside summary { pointer-events: auto; cursor: pointer; } }
+  aside summary::-webkit-details-marker { display: none; }
+  aside h3 { font-size: 14px; font-weight: 700; margin: 14px 0 4px; color: var(--accent-dark); }
+  aside p, aside ul, aside ol { margin: 4px 0; }
+  aside ul, aside ol { padding-left: 18px; }
+  aside li { margin: 3px 0; }
+  aside dl { margin: 4px 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; }
+  aside dt { font-weight: 700; font-family: Consolas, monospace; background: var(--accent-soft); color: var(--accent-dark);
+             border-radius: 6px; padding: 0 7px; height: fit-content; }
+  aside dd { margin: 0; }
+  aside .ex { color: var(--muted); font-size: 13px; }
+  aside a { color: var(--accent-dark); font-weight: 700; }
+  code { font-family: Consolas, monospace; font-size: 13px; background: var(--bg); border-radius: 4px; padding: 0 4px; }
   section { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
   h2 { margin: 0 0 10px; font-size: 17px; font-weight: 700; }
   h2 .n { display: inline-block; width: 24px; height: 24px; line-height: 24px; text-align: center; border-radius: 50%;
@@ -67,22 +86,41 @@
   ol { margin: 6px 0 0; padding-left: 20px; }
   .hidden { display: none; }
   ul.ev li .row { flex-shrink: 0; }
-  @media (max-width: 760px) { .cols, .grid2 { grid-template-columns: 1fr; } }
+  .mob { display: none; }
+  /* Tablette et mobile : une colonne, aide repliee en haut, textes resumes */
+  @media (max-width: 1000px) {
+    main { grid-template-columns: 1fr; }
+    aside { position: static; max-height: none; order: -1; padding: 0 14px; }
+    aside details[open] { padding-bottom: 12px; }
+    aside summary::after { content: " \25BE"; color: var(--muted); }
+    aside details[open] summary::after { content: " \25B4"; }
+    .pc { display: none !important; }
+    .mob { display: inline; }
+  }
+  @media (max-width: 760px) {
+    .cols, .grid2 { grid-template-columns: 1fr; }
+    main { padding: 10px; gap: 10px; } .work { gap: 10px; }
+    section { padding: 12px; }
+    header { padding: 10px 12px; } header h1 { font-size: 18px; }
+    .mail { max-height: 180px; }
+    ul.ev .x { display: none; }
+  }
   @media (max-width: 620px) { ul.ev li { flex-direction: column; gap: 6px; } }
 </style>
 </head>
 <body>
 <header>
   <h1>Ajout de rendez-vous mail</h1>
-  <p>Agenda unifi&eacute; CFE-CGC Orange FC : le mail est lu sur ce PC uniquement, rien n'est envoy&eacute;.</p>
+  <p><span class="pc">Agenda unifi&eacute; CFE-CGC Orange FC : le</span><span class="mob">Le</span> mail est lu sur cet appareil uniquement, rien n'est envoy&eacute;.</p>
 </header>
 <main>
+<div class="work">
 
 <section>
   <h2><span class="n">1</span>Rendez-vous mail actuels</h2>
   <div class="row">
-    <button id="reload" class="sec">Recharger depuis GitHub</button>
-    <label class="btn sec" style="margin:0">Charger un ajouts.json<input id="jsonFile" type="file" accept=".json" class="hidden"></label>
+    <button id="reload" class="sec">Recharger<span class="pc"> depuis GitHub</span></button>
+    <label class="btn sec" style="margin:0">Charger un <span class="pc">ajouts.json</span><span class="mob">fichier</span><input id="jsonFile" type="file" accept=".json" class="hidden"></label>
     <span id="loadMsg" class="muted"></span>
   </div>
   <ul id="list" class="ev" style="margin-top:10px"></ul>
@@ -91,19 +129,19 @@
 <section>
   <h2><span class="n">2</span>Ajouter ou modifier un rendez-vous</h2>
   <div id="drop" class="drop">D&eacute;pose ici le fichier <b>.eml</b> (ou clique pour le choisir)<br>
-    <span class="muted">Dans Outlook : glisser le mail sur le bureau cr&eacute;e le fichier .eml (ou .msg : dans ce cas, remplis le formulaire &agrave; la main).</span>
+    <span class="muted pc">Dans Outlook : glisser le mail sur le bureau cr&eacute;e le fichier .eml (ou .msg : dans ce cas, remplis le formulaire &agrave; la main).</span>
     <input id="emlFile" type="file" accept=".eml,message/rfc822" class="hidden"></div>
   <div class="cols" style="margin-top:6px">
     <div>
-      <label for="ft">Titre (court et clair)</label><input id="ft" type="text">
+      <label for="ft">Titre <span class="pc">(court et clair)</span> <span class="tag">t</span></label><input id="ft" type="text">
       <div class="grid2">
-        <div><label for="fd">Date</label><input id="fd" type="date"></div>
-        <div><label for="fh">Horaire (09h30 - 11h00, 18h00, ou vide)</label><input id="fh" type="text" placeholder="09h30 - 11h00"></div>
+        <div><label for="fd">Date <span class="tag">d</span></label><input id="fd" type="date"></div>
+        <div><label for="fh">Horaire <span class="pc">(09h30 - 11h00, 18h00, ou vide)</span> <span class="tag">h</span></label><input id="fh" type="text" placeholder="09h30 - 11h00"></div>
       </div>
-      <label for="fg">Lieu ou type, court (Orange Bridge, Webinaire URIF, Teams...)</label><input id="fg" type="text">
-      <label for="fx">R&eacute;sum&eacute; : organisateur, intervenants, adresse compl&egrave;te ou &laquo; via Teams &raquo;</label>
-      <textarea id="fx"></textarea>
-      <p class="muted">L'adresse ou &laquo; Teams &raquo; dans le r&eacute;sum&eacute; sert &agrave; placer le rendez-vous sur la carte et &agrave; d&eacute;tecter pr&eacute;sentiel / distanciel.
+      <label for="fg">Lieu ou type<span class="pc">, court (Orange Bridge, Webinaire URIF, Teams...)</span> <span class="tag">g</span></label><input id="fg" type="text" placeholder="Orange Bridge">
+      <label for="fx">R&eacute;sum&eacute;<span class="pc"> : organisateur, intervenants, adresse compl&egrave;te ou &laquo; via Teams &raquo;</span> <span class="tag">x</span></label>
+      <textarea id="fx" placeholder="Organisateur, intervenants, adresse compl&egrave;te ou &laquo; via Teams &raquo;"></textarea>
+      <p class="muted pc">L'adresse ou &laquo; Teams &raquo; dans le r&eacute;sum&eacute; sert &agrave; placer le rendez-vous sur la carte et &agrave; d&eacute;tecter pr&eacute;sentiel / distanciel.
         Plusieurs jours : &eacute;crire &laquo; du 7 au 10 d&eacute;cembre &raquo;. Aucun lien, aucun num&eacute;ro de t&eacute;l&eacute;phone, aucun nom de destinataire.</p>
       <div class="row" style="margin-top:10px">
         <button id="add">Ajouter &agrave; la liste</button>
@@ -112,7 +150,7 @@
       <div id="formMsg" class="msg"></div>
     </div>
     <div>
-      <div class="muted">Texte du mail (pour relire et copier des passages) :</div>
+      <div class="muted">Texte du mail<span class="pc"> (pour relire et copier des passages)</span> :</div>
       <div id="mail" class="mail muted">Aucun mail charg&eacute;.</div>
     </div>
   </div>
@@ -124,14 +162,63 @@
   <ol>
     <li><button id="copy" class="small">Copier le nouveau ajouts.json</button> <span id="copyMsg" class="muted"></span></li>
     <li>Ouvrir <a id="ghEdit" class="btn small" target="_blank" rel="noopener" href="https://github.com/cfetest/agenda-cfecgc/edit/main/ajouts.json">ajouts.json sur GitHub (modification)</a>
-      et se connecter avec le compte <b>cfetest</b> si demand&eacute;.</li>
-    <li>Dans l'&eacute;diteur : <b>Ctrl+A</b> puis <b>Ctrl+V</b>.</li>
-    <li>Bouton vert <b>Commit changes...</b> puis <b>Commit changes</b>. Le site se met &agrave; jour en 3 &agrave; 5 minutes.</li>
+<span class="pc"> et se connecter avec le compte <b>cfetest</b> si demand&eacute;</span>.</li>
+    <li><span class="pc">Dans l'&eacute;diteur : </span><b>Ctrl+A</b> puis <b>Ctrl+V</b><span class="mob"> (tout s&eacute;lectionner, coller)</span>.</li>
+    <li><b>Commit changes</b> (deux fois). <span class="pc">Le site se met &agrave; jour en 3 &agrave; 5 minutes.</span><span class="mob">En ligne sous 5 min.</span></li>
   </ol>
-  <p class="muted">Autre possibilit&eacute; : <button id="download" class="small sec">T&eacute;l&eacute;charger ajouts.json</button>
+  <p class="muted pc">Autre possibilit&eacute; : <button id="download" class="small sec">T&eacute;l&eacute;charger ajouts.json</button>
     puis sur GitHub <b>Add file</b> &rarr; <b>Upload files</b> &rarr; d&eacute;poser le fichier &rarr; <b>Commit changes</b>.</p>
   <details><summary class="muted">Voir le JSON produit</summary><pre id="json" class="json"></pre></details>
 </section>
+
+</div>
+
+<aside><details id="help" open>
+  <summary>Aide</summary>
+
+  <h3>En bref</h3>
+  <ol>
+    <li>La liste <b>1</b> montre les rendez-vous mail <b>&agrave; venir</b> (les pass&eacute;s sont ignor&eacute;s).</li>
+    <li>D&eacute;pose le <b>.eml</b> en <b>2</b>, relis et corrige chaque champ, puis <b>Ajouter</b>.</li>
+    <li>En <b>3</b> : <b>Copier</b>, ouvrir GitHub, <b>Ctrl+A</b>, <b>Ctrl+V</b>, <b>Commit changes</b>.</li>
+  </ol>
+
+  <h3>Les champs du fichier ajouts.json</h3>
+  <dl>
+    <dt>t</dt><dd><b>Titre</b>, en gras sur la carte.<br><span class="ex">Webinaire : Transformations et r&eacute;organisations</span></dd>
+    <dt>d</dt><dd><b>Date</b>, au format AAAA-MM-JJ : jour dans Prochains et Agenda.<br><span class="ex">2026-11-17</span></dd>
+    <dt>h</dt><dd><b>Horaire</b> : heure sur la carte et bloc dans la frise. Vide = &laquo; Horaire non pr&eacute;cis&eacute; &raquo;.<br><span class="ex">09h30 - 11h00, 18h00 ou vide</span></dd>
+    <dt>g</dt><dd><b>&Eacute;tiquette</b> : lieu ou type, court. Affich&eacute;e sur la carte, utilis&eacute;e par la recherche.<br><span class="ex">Orange Bridge, Webinaire URIF</span></dd>
+    <dt>x</dt><dd><b>R&eacute;sum&eacute;</b>, visible quand la carte est d&eacute;pli&eacute;e.<br><span class="ex">Organis&eacute; par l'URIF. 63 rue du Rocher, 75008 Paris.</span></dd>
+    <dt>u</dt><dd><b>Lien</b> : toujours vide pour les mails (aucun lien publi&eacute;). La carte affiche &laquo; Liste de diffusion &rarr; &raquo;.</dd>
+  </dl>
+
+  <h3>Le r&eacute;sum&eacute; compte</h3>
+  <p>Le site le lit pour deviner :</p>
+  <ul>
+    <li><b>le lieu sur la carte</b> : adresse, ville ou site Orange connu ;</li>
+    <li><b>le mode</b> : &laquo; Teams &raquo;, &laquo; webinaire &raquo; = distanciel ; adresse, salle = pr&eacute;sentiel ; les deux = hybride ;</li>
+    <li><b>plusieurs jours</b> : &eacute;crire &laquo; du 7 au 10 d&eacute;cembre &raquo;.</li>
+  </ul>
+
+  <h3>Interdit</h3>
+  <ul>
+    <li>Liens, liens Teams, codes de connexion, num&eacute;ros de t&eacute;l&eacute;phone.</li>
+    <li>Noms des destinataires ou de la personne qui a transf&eacute;r&eacute; le mail.</li>
+    <li>S&eacute;parateurs &laquo; &middot; &raquo; et tirets longs : utiliser &laquo; : &raquo; ou &laquo; - &raquo;.</li>
+  </ul>
+
+  <h3>Corriger ou supprimer</h3>
+  <p>En <b>1</b> : <b>Modifier</b> remplit le formulaire, <b>Supprimer</b> retire le rendez-vous. Puis publier en <b>3</b>.
+    Les rendez-vous du site cfecgc-orange.org ne se retirent pas ici.</p>
+
+  <h3>Liens utiles</h3>
+  <ul>
+    <li><a href="https://cfetest.github.io/agenda-cfecgc/" target="_blank" rel="noopener">L'agenda en ligne</a></li>
+    <li><a href="https://github.com/cfetest/agenda-cfecgc/blob/main/ajouts.json" target="_blank" rel="noopener">ajouts.json sur GitHub</a></li>
+    <li><a href="https://github.com/cfetest/agenda-cfecgc/actions" target="_blank" rel="noopener">Mises &agrave; jour du site</a> (coche verte = publi&eacute;)</li>
+  </ul>
+</details></aside>
 
 </main>
 <script>
@@ -328,7 +415,10 @@
   // ---------- Liste ----------
   function fmtDate(d) {
     var x = new Date(d + 'T12:00:00');
-    return isNaN(x) ? d : x.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    if (isNaN(x)) return d;
+    return window.matchMedia('(max-width: 760px)').matches
+      ? x.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
+      : x.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   }
   function render() {
     list.sort(function (a, b) { return (a.d + a.h).localeCompare(b.d + b.h); });
@@ -360,8 +450,12 @@
   }
   function load(arr, src) {
     if (!Array.isArray(arr)) throw new Error('le fichier ne contient pas une liste');
-    list = arr.map(norm); base = list.map(norm); editing = -1;
-    $('loadMsg').textContent = list.length + ' rendez-vous chargé' + (list.length > 1 ? 's' : '') + ' (' + src + ').';
+    // Rendez-vous passes : ni charges ni republies (le site les ignore deja)
+    var t0 = today(), all = arr.map(norm);
+    list = all.filter(function (a) { return a.d >= t0; }); base = list.map(norm); editing = -1;
+    var past = all.length - list.length;
+    $('loadMsg').textContent = list.length + ' rendez-vous à venir chargé' + (list.length > 1 ? 's' : '') + ' (' + src + ')' +
+      (past ? ', ' + past + ' passé' + (past > 1 ? 's' : '') + ' ignoré' + (past > 1 ? 's' : '') : '') + '.';
     render();
   }
   function loadRemote() {
@@ -431,6 +525,13 @@
   window.addEventListener('beforeunload', function (e) {
     if ($('changes').querySelector('.o,.w,.e')) { e.preventDefault(); e.returnValue = ''; }
   });
+
+  // Aide : toujours ouverte sur PC (colonne droite), repliee au depart sur tablette et mobile
+  var mq = window.matchMedia('(max-width: 1000px)');
+  $('help').open = !mq.matches;
+  mq.addEventListener('change', function () { $('help').open = !mq.matches; });
+  // Tous les liens vers GitHub ou le site s'ouvrent dans un nouvel onglet
+  document.querySelectorAll('a[href^="http"]').forEach(function (a) { a.target = '_blank'; a.rel = 'noopener'; });
 
   window.__test = { parseEml: parseEml, bytesToBin: bytesToBin, fillFromMail: fillFromMail, load: load };
   loadRemote();
