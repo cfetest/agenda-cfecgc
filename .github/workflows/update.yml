@@ -65,6 +65,9 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force _site | Out-Null
           Copy-Item index.html, style.css, app.js, travaux.svg _site\
+          # Outil provisoire d'ajout des rendez-vous mail (a retirer avec le dossier outils/ quand n8n prendra le relais)
+          New-Item -ItemType Directory -Force _site\outils | Out-Null
+          Copy-Item outils\ajout-mail.html _site\outils\
           # Heure de publication (UTC, secondes), lue par le job "horaire" au passage suivant.
           [IO.File]::WriteAllText("_site\stamp.txt", [string][DateTimeOffset]::UtcNow.ToUnixTimeSeconds())
 
