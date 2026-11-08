@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Ajout de rendez-vous mail</title>
+<script>
+  // Theme avant affichage (pas de flash) : choix memorise ("theme", partage avec l'agenda), sinon systeme
+  (function () { var t = null; try { t = localStorage.getItem('theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', t); })();
+</script>
 <!--
   Outil LOCAL (aucune installation) : ouvrir ce fichier dans un navigateur (double-clic).
   - charge ajouts.json en ligne (ou un fichier choisi), affiche la liste, permet supprimer / modifier ;
@@ -19,15 +25,24 @@
     --accent: #faa82b; --accent-dark: #9a5108; --accent-soft: #fff6ea; --err: #b3261e; --ok: #1e7b34;
     --radius: 10px;
   }
+  /* Theme sombre : systeme par defaut, ou choix du bouton (data-theme, meme reglage "theme" que l'agenda) */
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #111116; --card: #1b1b22; --text: #f2f2f6; --muted: #a3a3b2; --line: #34343e;
+    :root:not([data-theme="light"]) { --bg: #111116; --card: #1b1b22; --text: #f2f2f6; --muted: #a3a3b2; --line: #34343e;
             --accent-dark: #f5b860; --accent-soft: #2b2112; --err: #ff8a80; --ok: #7bd88f; }
   }
+  :root[data-theme="dark"] { --bg: #111116; --card: #1b1b22; --text: #f2f2f6; --muted: #a3a3b2; --line: #34343e;
+          --accent-dark: #f5b860; --accent-soft: #2b2112; --err: #ff8a80; --ok: #7bd88f; color-scheme: dark; }
+  :root[data-theme="light"] { color-scheme: light; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 "Segoe UI", system-ui, sans-serif; }
-  header { background: var(--accent); color: #1c1c23; padding: 14px 16px; }
+  header { background: var(--accent); color: #1c1c23; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+  header .ht { flex: 1; min-width: 0; }
   header h1 { margin: 0; font-size: 20px; font-weight: 700; }
   header p { margin: 2px 0 0; font-size: 13px; }
+  #themeBtn { flex-shrink: 0; background: rgba(255, 255, 255, .35); border-color: rgba(28, 28, 35, .25); color: #1c1c23;
+              display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  #themeBtn:hover { background: var(--accent-soft); color: var(--text); }
+  #themeBtn svg { width: 18px; height: 18px; }
   main { max-width: 1440px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
          gap: 16px; align-items: start; }
   .work { display: grid; gap: 16px; min-width: 0; }
@@ -102,6 +117,7 @@
     main { padding: 10px; gap: 10px; } .work { gap: 10px; }
     section { padding: 12px; }
     header { padding: 10px 12px; } header h1 { font-size: 18px; }
+    #themeLbl { display: none; } #themeBtn { padding: 9px; }
     .mail { max-height: 180px; }
     ul.ev .x { display: none; }
   }
@@ -110,26 +126,19 @@
 </head>
 <body>
 <header>
-  <h1>Ajout de rendez-vous mail</h1>
-  <p><span class="pc">Agenda unifi&eacute; CFE-CGC Orange FC : le</span><span class="mob">Le</span> mail est lu sur cet appareil uniquement, rien n'est envoy&eacute;.</p>
+  <div class="ht">
+    <h1>Ajout de rendez-vous mail</h1>
+    <p><span class="pc">Agenda unifi&eacute; CFE-CGC Orange FC&nbsp;: le</span><span class="mob">Le</span> mail est lu sur cet appareil uniquement, rien n'est envoy&eacute;.</p>
+  </div>
+  <button id="themeBtn" type="button" title="Changer de th&egrave;me"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><span id="themeLbl">Mode nuit</span></button>
 </header>
 <main>
 <div class="work">
 
 <section>
-  <h2><span class="n">1</span>Rendez-vous mail actuels</h2>
-  <div class="row">
-    <button id="reload" class="sec">Recharger<span class="pc"> depuis GitHub</span></button>
-    <label class="btn sec" style="margin:0">Charger un <span class="pc">ajouts.json</span><span class="mob">fichier</span><input id="jsonFile" type="file" accept=".json" class="hidden"></label>
-    <span id="loadMsg" class="muted"></span>
-  </div>
-  <ul id="list" class="ev" style="margin-top:10px"></ul>
-</section>
-
-<section>
-  <h2><span class="n">2</span>Ajouter ou modifier un rendez-vous</h2>
+  <h2><span class="n">1</span>Ajouter ou modifier un rendez-vous</h2>
   <div id="drop" class="drop">D&eacute;pose ici le fichier <b>.eml</b> (ou clique pour le choisir)<br>
-    <span class="muted pc">Dans Outlook : glisser le mail sur le bureau cr&eacute;e le fichier .eml (ou .msg : dans ce cas, remplis le formulaire &agrave; la main).</span>
+    <span class="muted pc">Dans Outlook&nbsp;: glisser le mail sur le bureau cr&eacute;e le fichier .eml (ou .msg&nbsp;: dans ce cas, remplis le formulaire &agrave; la main).</span>
     <input id="emlFile" type="file" accept=".eml,message/rfc822" class="hidden"></div>
   <div class="cols" style="margin-top:6px">
     <div>
@@ -139,10 +148,10 @@
         <div><label for="fh">Horaire <span class="pc">(09h30 - 11h00, 18h00, ou vide)</span> <span class="tag">h</span></label><input id="fh" type="text" placeholder="09h30 - 11h00"></div>
       </div>
       <label for="fg">Lieu ou type<span class="pc">, court (Orange Bridge, Webinaire URIF, Teams...)</span> <span class="tag">g</span></label><input id="fg" type="text" placeholder="Orange Bridge">
-      <label for="fx">R&eacute;sum&eacute;<span class="pc"> : organisateur, intervenants, adresse compl&egrave;te ou &laquo; via Teams &raquo;</span> <span class="tag">x</span></label>
-      <textarea id="fx" placeholder="Organisateur, intervenants, adresse compl&egrave;te ou &laquo; via Teams &raquo;"></textarea>
-      <p class="muted pc">L'adresse ou &laquo; Teams &raquo; dans le r&eacute;sum&eacute; sert &agrave; placer le rendez-vous sur la carte et &agrave; d&eacute;tecter pr&eacute;sentiel / distanciel.
-        Plusieurs jours : &eacute;crire &laquo; du 7 au 10 d&eacute;cembre &raquo;. Aucun lien, aucun num&eacute;ro de t&eacute;l&eacute;phone, aucun nom de destinataire.</p>
+      <label for="fx">R&eacute;sum&eacute;<span class="pc">&nbsp;: organisateur, intervenants, adresse compl&egrave;te ou &laquo;&nbsp;via Teams&nbsp;&raquo;</span> <span class="tag">x</span></label>
+      <textarea id="fx" placeholder="Organisateur, intervenants, adresse compl&egrave;te ou &laquo;&nbsp;via Teams&nbsp;&raquo;"></textarea>
+      <p class="muted pc">L'adresse ou &laquo;&nbsp;Teams&nbsp;&raquo; dans le r&eacute;sum&eacute; sert &agrave; placer le rendez-vous sur la carte et &agrave; d&eacute;tecter pr&eacute;sentiel / distanciel.
+        Plusieurs jours&nbsp;: &eacute;crire &laquo;&nbsp;du 7 au 10 d&eacute;cembre&nbsp;&raquo;. Aucun lien, aucun num&eacute;ro de t&eacute;l&eacute;phone, aucun nom de destinataire.</p>
       <div class="row" style="margin-top:10px">
         <button id="add">Ajouter &agrave; la liste</button>
         <button id="clear" class="sec">Vider le formulaire</button>
@@ -157,16 +166,26 @@
 </section>
 
 <section>
+  <h2><span class="n">2</span>Rendez-vous mail &agrave; venir</h2>
+  <div class="row">
+    <button id="reload" class="sec">Recharger<span class="pc"> depuis GitHub</span></button>
+    <label class="btn sec" style="margin:0">Charger un <span class="pc">ajouts.json</span><span class="mob">fichier</span><input id="jsonFile" type="file" accept=".json" class="hidden"></label>
+    <span id="loadMsg" class="muted"></span>
+  </div>
+  <ul id="list" class="ev" style="margin-top:10px"></ul>
+</section>
+
+<section>
   <h2><span class="n">3</span>Publier sur GitHub</h2>
   <div id="changes" class="msg"></div>
   <ol>
     <li><button id="copy" class="small">Copier le nouveau ajouts.json</button> <span id="copyMsg" class="muted"></span></li>
     <li>Ouvrir <a id="ghEdit" class="btn small" target="_blank" rel="noopener" href="https://github.com/cfetest/agenda-cfecgc/edit/main/ajouts.json">ajouts.json sur GitHub (modification)</a>
 <span class="pc"> et se connecter avec le compte <b>cfetest</b> si demand&eacute;</span>.</li>
-    <li><span class="pc">Dans l'&eacute;diteur : </span><b>Ctrl+A</b> puis <b>Ctrl+V</b><span class="mob"> (tout s&eacute;lectionner, coller)</span>.</li>
+    <li><span class="pc">Dans l'&eacute;diteur&nbsp;: </span><b>Ctrl+A</b> puis <b>Ctrl+V</b><span class="mob"> (tout s&eacute;lectionner, coller)</span>.</li>
     <li><b>Commit changes</b> (deux fois). <span class="pc">Le site se met &agrave; jour en 3 &agrave; 5 minutes.</span><span class="mob">En ligne sous 5 min.</span></li>
   </ol>
-  <p class="muted pc">Autre possibilit&eacute; : <button id="download" class="small sec">T&eacute;l&eacute;charger ajouts.json</button>
+  <p class="muted pc">Autre possibilit&eacute;&nbsp;: <button id="download" class="small sec">T&eacute;l&eacute;charger ajouts.json</button>
     puis sur GitHub <b>Add file</b> &rarr; <b>Upload files</b> &rarr; d&eacute;poser le fichier &rarr; <b>Commit changes</b>.</p>
   <details><summary class="muted">Voir le JSON produit</summary><pre id="json" class="json"></pre></details>
 </section>
@@ -178,38 +197,38 @@
 
   <h3>En bref</h3>
   <ol>
-    <li>La liste <b>1</b> montre les rendez-vous mail <b>&agrave; venir</b> (les pass&eacute;s sont ignor&eacute;s).</li>
-    <li>D&eacute;pose le <b>.eml</b> en <b>2</b>, relis et corrige chaque champ, puis <b>Ajouter</b>.</li>
-    <li>En <b>3</b> : <b>Copier</b>, ouvrir GitHub, <b>Ctrl+A</b>, <b>Ctrl+V</b>, <b>Commit changes</b>.</li>
+    <li>D&eacute;pose le <b>.eml</b> en <b>1</b>, relis et corrige chaque champ, puis <b>Ajouter</b>.</li>
+    <li>La liste <b>2</b> montre les rendez-vous mail <b>&agrave; venir</b> (les pass&eacute;s sont ignor&eacute;s).</li>
+    <li>En <b>3</b>&nbsp;: <b>Copier</b>, ouvrir GitHub, <b>Ctrl+A</b>, <b>Ctrl+V</b>, <b>Commit changes</b>.</li>
   </ol>
 
   <h3>Les champs du fichier ajouts.json</h3>
   <dl>
-    <dt>t</dt><dd><b>Titre</b>, en gras sur la carte.<br><span class="ex">Webinaire : Transformations et r&eacute;organisations</span></dd>
-    <dt>d</dt><dd><b>Date</b>, au format AAAA-MM-JJ : jour dans Prochains et Agenda.<br><span class="ex">2026-11-17</span></dd>
-    <dt>h</dt><dd><b>Horaire</b> : heure sur la carte et bloc dans la frise. Vide = &laquo; Horaire non pr&eacute;cis&eacute; &raquo;.<br><span class="ex">09h30 - 11h00, 18h00 ou vide</span></dd>
-    <dt>g</dt><dd><b>&Eacute;tiquette</b> : lieu ou type, court. Affich&eacute;e sur la carte, utilis&eacute;e par la recherche.<br><span class="ex">Orange Bridge, Webinaire URIF</span></dd>
+    <dt>t</dt><dd><b>Titre</b>, en gras sur la carte.<br><span class="ex">Webinaire&nbsp;: Transformations et r&eacute;organisations</span></dd>
+    <dt>d</dt><dd><b>Date</b>, au format AAAA-MM-JJ&nbsp;: jour dans Prochains et Agenda.<br><span class="ex">2026-11-17</span></dd>
+    <dt>h</dt><dd><b>Horaire</b>&nbsp;: heure sur la carte et bloc dans la frise. Vide = &laquo;&nbsp;Horaire non pr&eacute;cis&eacute;&nbsp;&raquo;.<br><span class="ex">09h30 - 11h00, 18h00 ou vide</span></dd>
+    <dt>g</dt><dd><b>&Eacute;tiquette</b>&nbsp;: lieu ou type, court. Affich&eacute;e sur la carte, utilis&eacute;e par la recherche.<br><span class="ex">Orange Bridge, Webinaire URIF</span></dd>
     <dt>x</dt><dd><b>R&eacute;sum&eacute;</b>, visible quand la carte est d&eacute;pli&eacute;e.<br><span class="ex">Organis&eacute; par l'URIF. 63 rue du Rocher, 75008 Paris.</span></dd>
-    <dt>u</dt><dd><b>Lien</b> : toujours vide pour les mails (aucun lien publi&eacute;). La carte affiche &laquo; Liste de diffusion &rarr; &raquo;.</dd>
+    <dt>u</dt><dd><b>Lien</b>&nbsp;: toujours vide pour les mails (aucun lien publi&eacute;). La carte affiche &laquo;&nbsp;Liste de diffusion &rarr;&nbsp;&raquo;.</dd>
   </dl>
 
   <h3>Le r&eacute;sum&eacute; compte</h3>
   <p>Le site le lit pour deviner :</p>
   <ul>
-    <li><b>le lieu sur la carte</b> : adresse, ville ou site Orange connu ;</li>
-    <li><b>le mode</b> : &laquo; Teams &raquo;, &laquo; webinaire &raquo; = distanciel ; adresse, salle = pr&eacute;sentiel ; les deux = hybride ;</li>
-    <li><b>plusieurs jours</b> : &eacute;crire &laquo; du 7 au 10 d&eacute;cembre &raquo;.</li>
+    <li><b>le lieu sur la carte</b>&nbsp;: adresse, ville ou site Orange connu ;</li>
+    <li><b>le mode</b>&nbsp;: &laquo;&nbsp;Teams&nbsp;&raquo;, &laquo;&nbsp;webinaire&nbsp;&raquo; = distanciel ; adresse, salle = pr&eacute;sentiel ; les deux = hybride ;</li>
+    <li><b>plusieurs jours</b>&nbsp;: &eacute;crire &laquo;&nbsp;du 7 au 10 d&eacute;cembre&nbsp;&raquo;.</li>
   </ul>
 
   <h3>Interdit</h3>
   <ul>
     <li>Liens, liens Teams, codes de connexion, num&eacute;ros de t&eacute;l&eacute;phone.</li>
     <li>Noms des destinataires ou de la personne qui a transf&eacute;r&eacute; le mail.</li>
-    <li>S&eacute;parateurs &laquo; &middot; &raquo; et tirets longs : utiliser &laquo; : &raquo; ou &laquo; - &raquo;.</li>
+    <li>S&eacute;parateurs &laquo;&nbsp;&middot;&nbsp;&raquo; et tirets longs&nbsp;: utiliser &laquo;&nbsp;:&nbsp;&raquo; ou &laquo;&nbsp;-&nbsp;&raquo;.</li>
   </ul>
 
   <h3>Corriger ou supprimer</h3>
-  <p>En <b>1</b> : <b>Modifier</b> remplit le formulaire, <b>Supprimer</b> retire le rendez-vous. Puis publier en <b>3</b>.
+  <p>En <b>2</b>&nbsp;: <b>Modifier</b> remplit le formulaire, <b>Supprimer</b> retire le rendez-vous. Puis publier en <b>3</b>.
     Les rendez-vous du site cfecgc-orange.org ne se retirent pas ici.</p>
 
   <h3>Liens utiles</h3>
@@ -366,7 +385,7 @@
   }
   function fillFromMail(m) {
     var lines = bodyLines(m.text), body = lines.join('\n'), deep = deepest(m.text), dtext = deep.join('\n');
-    $('mail').textContent = (m.subject ? 'Objet : ' + m.subject + '\n\n' : '') + (m.text || '(texte introuvable)');
+    $('mail').textContent = (m.subject ? 'Objet : ' + m.subject + '\n\n' : '') + (m.text || '(texte introuvable)');
     $('mail').classList.remove('muted');
     editing = -1;
     $('ft').value = cleanTitle(m.subject);
@@ -375,7 +394,7 @@
     $('fg').value = findPlace(m.subject + '\n' + dtext);
     $('fx').value = summary(deep) || summary(lines);
     $('add').textContent = 'Ajouter à la liste';
-    showForm([], ['Formulaire pré-rempli : relis et corrige chaque champ avant d\'ajouter.']);
+    showForm([], ['Formulaire pré-rempli : relis et corrige chaque champ avant d\'ajouter.']);
   }
   function readEml(file) {
     if (!file) return;
@@ -390,19 +409,19 @@
     var e = [], w = [];
     if (!a.t) e.push('Titre manquant.');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(a.d) || isNaN(new Date(a.d + 'T12:00:00'))) e.push('Date manquante ou invalide.');
-    else if (a.d < today()) e.push('Date passée : le site ne l\'afficherait pas.');
-    else if (a.d > iso(new Date(Date.now() + 400 * 864e5))) e.push('Date trop lointaine : erreur d\'année ?');
+    else if (a.d < today()) e.push('Date passée : le site ne l\'afficherait pas.');
+    else if (a.d > iso(new Date(Date.now() + 400 * 864e5))) e.push('Date trop lointaine : erreur d\'année ?');
     if (a.h && !/^\d{2}h\d{2}( - \d{2}h\d{2})?$/.test(a.h)) e.push('Horaire : formats acceptés 09h30 - 11h00, 18h00, ou vide.');
     var txt = [a.t, a.g, a.x, a.h].join(' ');
     if (/https?:\/\/|www\.|\.(fr|com|org|net)\//i.test(txt)) e.push('Lien interdit (aucun lien publié pour les mails).');
     if (/<[a-z\/]/i.test(txt)) e.push('Balise HTML interdite.');
     if (/(\+33|\b0)[1-9](?:[ .-]?\d{2}){4}/.test(txt)) e.push('Numéro de téléphone interdit.');
     if (/[·–—]/.test(txt)) w.push('Séparateurs « · » ou tirets longs : préférer « : » ou « - ».');
-    if (!a.h) w.push('Sans horaire, la carte affichera « Horaire non précisé ».');
+    if (!a.h) w.push('Sans horaire, la carte affichera « Horaire non précisé ».');
     list.forEach(function (b, i) {
       if (i === ignoreIdx || b.d !== a.d) return;
-      if (key(b) === key(a)) e.push('Doublon : même date et même titre déjà dans la liste.');
-      else w.push('Déjà un rendez-vous ce jour-là (« ' + b.t + ' ») : vérifie que ce n\'est pas le même.');
+      if (key(b) === key(a)) e.push('Doublon : même date et même titre déjà dans la liste.');
+      else w.push('Déjà un rendez-vous ce jour-là (« ' + b.t + ' ») : vérifie que ce n\'est pas le même.');
     });
     return { e: e, w: w };
   }
@@ -426,7 +445,7 @@
     $('list').innerHTML = list.length ? list.map(function (a, i) {
       var past = a.d < t0;
       return '<li class="' + (past ? 'past' : '') + '"><div class="txt"><div><b>' + esc(fmtDate(a.d)) + '</b> ' + esc(a.h || 'horaire non précisé') +
-        (a.g ? ' : ' + esc(a.g) : '') + (past ? ' <span class="tag">passé : sera retiré</span>' : '') + '</div>' +
+        (a.g ? ' : ' + esc(a.g) : '') + (past ? ' <span class="tag">passé : sera retiré</span>' : '') + '</div>' +
         '<div class="t">' + esc(a.t) + '</div><div class="x">' + esc(a.x) + '</div></div>' +
         '<div class="row"><button class="small sec" data-ed="' + i + '">Modifier</button><button class="small sec" data-del="' + i + '">Supprimer</button></div></li>';
     }).join('') : '<li class="muted">Aucun rendez-vous mail.</li>';
@@ -440,12 +459,12 @@
     base.forEach(function (a) { oldK[key(a)] = a; });
     out.forEach(function (a) { newK[key(a)] = a; if (!oldK[key(a)]) add.push(a); else if (sig(oldK[key(a)]) !== sig(a)) mod.push(a); });
     base.forEach(function (a) { if (!newK[key(a)]) del.push(a); });
-    var line = function (a) { return esc(a.d + ' ' + (a.h || '') + ' : ' + a.t); };
+    var line = function (a) { return esc(a.d + ' ' + (a.h || '') + ' : ' + a.t); };
     var h = '';
-    if (add.length) h += '<div class="o"><b>Ajoutés (' + add.length + ') :</b> ' + add.map(line).join(' ; ') + '</div>';
-    if (mod.length) h += '<div class="w"><b>Modifiés (' + mod.length + ') :</b> ' + mod.map(line).join(' ; ') + '</div>';
-    if (del.length) h += '<div class="e"><b>Supprimés (' + del.length + ') :</b> ' + del.map(function (a) { return line(a) + (a.d < t0 ? ' (passé)' : ''); }).join(' ; ') + '</div>';
-    $('changes').innerHTML = h || '<div class="muted">Aucun changement par rapport &agrave; la version charg&eacute;e : rien &agrave; publier.</div>';
+    if (add.length) h += '<div class="o"><b>Ajoutés (' + add.length + ') :</b> ' + add.map(line).join(' ; ') + '</div>';
+    if (mod.length) h += '<div class="w"><b>Modifiés (' + mod.length + ') :</b> ' + mod.map(line).join(' ; ') + '</div>';
+    if (del.length) h += '<div class="e"><b>Supprimés (' + del.length + ') :</b> ' + del.map(function (a) { return line(a) + (a.d < t0 ? ' (passé)' : ''); }).join(' ; ') + '</div>';
+    $('changes').innerHTML = h || '<div class="muted">Aucun changement par rapport &agrave; la version charg&eacute;e : rien &agrave; publier.</div>';
     return json;
   }
   function load(arr, src) {
@@ -462,14 +481,14 @@
     $('loadMsg').textContent = 'Chargement...';
     fetch(RAW + '?x=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (j) { load(j, 'GitHub, version en ligne'); })
-      .catch(function (e) { $('loadMsg').textContent = 'Impossible de lire GitHub (' + e.message + ') : utilise « Charger un ajouts.json ».'; render(); });
+      .catch(function (e) { $('loadMsg').textContent = 'Impossible de lire GitHub (' + e.message + ') : utilise « Charger un ajouts.json ».'; render(); });
   }
 
   // ---------- Evenements ----------
   $('reload').onclick = loadRemote;
   $('jsonFile').onchange = function () {
     var f = this.files[0]; if (!f) return;
-    f.text().then(function (s) { try { load(JSON.parse(s), f.name); } catch (e) { $('loadMsg').textContent = 'Fichier invalide : ' + e.message; } });
+    f.text().then(function (s) { try { load(JSON.parse(s), f.name); } catch (e) { $('loadMsg').textContent = 'Fichier invalide : ' + e.message; } });
     this.value = '';
   };
   var drop = $('drop');
@@ -488,32 +507,32 @@
     var a = formVal(), r = check(a, editing);
     if (r.e.length) { showForm(r.e, r.w); return; }
     var same = r.w.filter(function (s) { return /^Déjà un rendez-vous/.test(s); });
-    if (same.length && !confirm(same.join('\n') + '\n\nAjouter quand même ?')) { showForm([], r.w); return; }
+    if (same.length && !confirm(same.join('\n') + '\n\nAjouter quand même ?')) { showForm([], r.w); return; }
     if (editing >= 0) list[editing] = a; else list.push(a);
     var was = editing; clearForm(); render();
-    showForm([], r.w, (was >= 0 ? 'Rendez-vous modifié' : 'Rendez-vous ajouté') + ' : passe à l\'étape 3 pour publier.');
+    showForm([], r.w, (was >= 0 ? 'Rendez-vous modifié' : 'Rendez-vous ajouté') + ' : passe à l\'étape 3 pour publier.');
   };
   $('clear').onclick = function () { clearForm(); showForm([], []); };
   $('list').onclick = function (e) {
     var b = e.target.closest('button'); if (!b) return;
     if (b.dataset.del != null) {
       var a = list[+b.dataset.del];
-      if (confirm('Retirer ce rendez-vous de la liste ?\n\n' + a.d + ' : ' + a.t)) { list.splice(+b.dataset.del, 1); editing = -1; render(); }
+      if (confirm('Retirer ce rendez-vous de la liste ?\n\n' + a.d + ' : ' + a.t)) { list.splice(+b.dataset.del, 1); editing = -1; render(); }
     } else if (b.dataset.ed != null) {
       var i = +b.dataset.ed, x = list[i]; editing = i;
       $('ft').value = x.t; $('fd').value = x.d; $('fh').value = x.h; $('fg').value = x.g; $('fx').value = x.x;
       $('add').textContent = 'Enregistrer la modification';
-      showForm([], ['Modification en cours : corrige puis clique « Enregistrer la modification ».']);
+      showForm([], ['Modification en cours : corrige puis clique « Enregistrer la modification ».']);
       $('ft').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   };
   $('copy').onclick = function () {
     var json = output();
-    var done = function () { $('copyMsg').textContent = 'Copié : colle-le sur GitHub (étape 3).'; };
+    var done = function () { $('copyMsg').textContent = 'Copié : colle-le sur GitHub (étape 3).'; };
     if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(json).then(done, fallback); else fallback();
     function fallback() {
       var t = document.createElement('textarea'); t.value = json; document.body.appendChild(t); t.select();
-      try { document.execCommand('copy'); done(); } catch (e) { $('copyMsg').textContent = 'Copie impossible : ouvre « Voir le JSON produit » et copie-le.'; }
+      try { document.execCommand('copy'); done(); } catch (e) { $('copyMsg').textContent = 'Copie impossible : ouvre « Voir le JSON produit » et copie-le.'; }
       t.remove();
     }
   };
@@ -526,10 +545,29 @@
     if ($('changes').querySelector('.o,.w,.e')) { e.preventDefault(); e.returnValue = ''; }
   });
 
+  // Bouton theme clair / sombre (meme reglage que l'agenda)
+  var root = document.documentElement;
+  var ICON_MOON = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
+  var ICON_SUN = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  function themeUi() {
+    var dark = root.getAttribute('data-theme') === 'dark';
+    $('themeBtn').querySelector('svg').innerHTML = dark ? ICON_SUN : ICON_MOON;
+    $('themeLbl').textContent = dark ? 'Mode jour' : 'Mode nuit';
+    $('themeBtn').setAttribute('aria-label', dark ? 'Passer en mode jour' : 'Passer en mode nuit');
+  }
+  $('themeBtn').onclick = function () {
+    var t = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', t);
+    try { localStorage.setItem('theme', t); } catch (e) {}
+    themeUi();
+  };
+  themeUi();
+
   // Aide : toujours ouverte sur PC (colonne droite), repliee au depart sur tablette et mobile
   var mq = window.matchMedia('(max-width: 1000px)');
   $('help').open = !mq.matches;
   mq.addEventListener('change', function () { $('help').open = !mq.matches; });
+  window.addEventListener('resize', function () { if (!mq.matches) $('help').open = true; });
   // Tous les liens vers GitHub ou le site s'ouvrent dans un nouvel onglet
   document.querySelectorAll('a[href^="http"]').forEach(function (a) { a.target = '_blank'; a.rel = 'noopener'; });
 
