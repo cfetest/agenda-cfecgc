@@ -173,7 +173,7 @@
 <header>
   <div class="ht">
     <h1>Ajout de rendez-vous mail</h1>
-    <p><span class="pc">Agenda unifi&eacute; CFE-CGC Orange FC&nbsp;: le</span><span class="mob">Le</span> mail est lu sur cet appareil uniquement, rien n'est envoy&eacute;.</p>
+    <p><span class="pc">Agenda unifi&eacute; CFE-CGC Orange FC&nbsp;: le</span><span class="mob">Le</span> mail est lu sur cet appareil uniquement, il n'est envoy&eacute; nulle part.</p>
   </div>
   <button id="themeBtn" type="button" title="Changer de th&egrave;me"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><span id="themeLbl">Mode nuit</span></button>
 </header>
@@ -243,7 +243,7 @@
 <section id="simu" class="simu">
   <h2>Simulation r&eacute;sultat</h2>
   <div id="simuBody"></div>
-  <p class="muted note">Aper&ccedil;u de la carte d&eacute;pli&eacute;e dans l'agenda. Lieu et mode sont une estimation&nbsp;: le site les calcule &agrave; la publication.</p>
+  <p class="muted note">Aper&ccedil;u de la carte d&eacute;pli&eacute;e dans l'agenda. Lieu et mode sont calcul&eacute;s comme sur le site (sites Orange, adresse, ville, d&eacute;partement). Seul le lieu d&eacute;tect&eacute; est v&eacute;rifi&eacute; en ligne, aupr&egrave;s de la Base Adresse Nationale.</p>
 </section>
 
 <aside><details id="help" open>
@@ -401,9 +401,10 @@
     if (m && +m[1] < 24) return hh(m[1], m[2]);
     return '';
   }
-  function findPlace(s) {
-    var f = fold(s), p = '';
-    ['Orange Bridge', 'Orange Gardens', 'Orange Lumiere', 'Orange Village'].some(function (n) { if (f.indexOf(fold(n)) >= 0) { p = n.replace('Lumiere', 'Lumière'); return true; } });
+  // Lieu propose : site Orange reconnu (lieux-orange.csv, memes regles que le site), sous son nom principal
+  function findPlace(title, text) {
+    var f = fold(title + '\n' + text), s = siteOf({ t: title, g: '', x: text });
+    var p = s ? String(s.variantes || s.libelle).split('|')[0] : '';
     var remote = /\bteams\b|visio|webinaire|a distance|distanciel/.test(f);
     if (p && remote) return p + ' ou Teams';
     if (p) return p;
@@ -435,7 +436,7 @@
     $('ft').value = cleanTitle(m.subject);
     $('fd').value = findDate(m.subject) || findDate(dtext) || findDate(body);
     $('fh').value = findTime(m.subject) || findTime(dtext) || findTime(body);
-    $('fg').value = findPlace(m.subject + '\n' + dtext);
+    $('fg').value = findPlace(cleanTitle(m.subject), dtext);
     $('fx').value = summary(deep) || summary(lines);
     $('add').textContent = 'Ajouter à la liste';
     showForm([], ['Formulaire pré-rempli : relis et corrige chaque champ avant d\'ajouter.']); renderSimu();
@@ -601,8 +602,88 @@
   });
 
   // ---------- Simulation resultat : la carte depliee telle que l'agenda l'affichera ----------
-  // Lieu et mode : memes regles que fetch-agenda.ps1 (Locate, Mode), sans geocodage
-  var SITES = [['Orange Bridge', 'Orange Bridge (Issy-les-Moulineaux)'], ['Interives', 'Orange Interives (Orléans)']];
+  // Lieu et mode : MEME algorithme que fetch-agenda.ps1 (SiteOf, Locate, Geo, Mode), avec les memes
+  // fichiers lieux-orange.csv et departements.csv lus sur GitHub, et le meme geocodage
+  // (api-adresse.data.gouv.fr) pour une adresse postale, une ville ou un departement.
+  var RAWBASE = 'https://raw.githubusercontent.com/cfetest/agenda-cfecgc/main/';
+  var SITE_KEYS = [], DEPTS = {}, LIEUX = 'chargement';
+  function normA(s) { return fold(s).replace(/[^a-z0-9]+/g, ' ').trim(); }   // Norm
+  function normLoc(s) {                                                         // NormLoc
+    var t = String(s == null ? '' : s).replace(/œ/g, 'oe').replace(/Œ/g, 'OE').replace(/æ/g, 'ae');
+    return ' ' + normA(t).split(' ').map(function (x) {
+      return x === 'st' ? 'saint' : x === 'ste' ? 'sainte' : x === '1er' ? 'ier' : (x.length > 3 && /[sx]$/.test(x) ? x.slice(0, -1) : x);
+    }).join(' ') + ' ';
+  }
+  function reEsc(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function csv(text) {
+    var rows = text.replace(/^﻿/, '').replace(/\r/g, '').split('\n').filter(function (l) { return l.trim(); });
+    var head = rows.shift().split(';');
+    return rows.map(function (l) { var c = l.split(';'), o = {}; head.forEach(function (h, i) { o[h] = (c[i] || '').trim(); }); return o; });
+  }
+  function buildSites(list) {
+    var keys = [];
+    list.forEach(function (s) {
+      if (!s.lat) return;
+      s.villeKey = normLoc(s.ville);
+      [[s.variantes, false], [s.variantes_contexte, true]].forEach(function (p) {
+        String(p[0] || '').split('|').forEach(function (v) { var k = normLoc(v).trim(); if (k) keys.push({ K: ' ' + k + ' ', Weak: p[1], S: s }); });
+      });
+    });
+    SITE_KEYS = keys.sort(function (a, b) { return b.K.length - a.K.length; });
+  }
+  function loadLieux() {
+    var get = function (f) { return fetch(RAWBASE + f + '?x=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(f); return r.text(); }); };
+    Promise.all([get('lieux-orange.csv'), get('departements.csv')]).then(function (t) {
+      buildSites(csv(t[0]));
+      DEPTS = {}; csv(t[1]).forEach(function (r) { DEPTS[normA(r.departement)] = r['chef-lieu']; });
+      LIEUX = 'ok'; renderSimu();
+    }).catch(function () { LIEUX = 'erreur'; renderSimu(); });
+  }
+  // SiteOf : variante "forte" seule, ou variante "de contexte" si le titre commence par elle,
+  // si la ville du site est citee, ou apres site / campus / batiment / immeuble / tour
+  function siteOf(a) {
+    var txt = normLoc(a.t + ' | ' + a.g + ' | ' + a.x);
+    var m = /^\s*([^:]{2,60}?)\s*:/.exec(a.t), pre = m ? normLoc(m[1]) : '';
+    for (var i = 0; i < SITE_KEYS.length; i++) {
+      var x = SITE_KEYS[i];
+      if (txt.indexOf(x.K) < 0) continue;
+      if (!x.Weak || pre === x.K || txt.indexOf(x.S.villeKey) >= 0 ||
+          new RegExp(' (site|campus|batiment|immeuble|tour)( d| de| du| de la| des)?' + reEsc(x.K)).test(txt)) return x.S;
+    }
+    return null;
+  }
+  // Geo : Base Adresse Nationale ; une ville doit figurer dans la recherche (ou la prolonger)
+  var geoCache = {};
+  function geo(q, city) {
+    var k = (city ? 'c|' : 'a|') + q;
+    if (!geoCache[k]) geoCache[k] = fetch('https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(q) + (city ? '&type=municipality' : ''))
+      .then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+        var f = j && j.features && j.features[0]; if (!f) return null;
+        var town = String(f.properties.city || ''), nq = normA(q), nt = normA(town);
+        var ok = city ? ((' ' + nq + ' ').indexOf(' ' + nt + ' ') >= 0 || (nq.length >= 4 && nt.indexOf(nq + ' ') === 0)) : f.properties.score >= 0.5;
+        return ok ? { city: town, dep: String(f.properties.context || '').split(',')[0].trim() } : null;
+      }).catch(function () { return null; });
+    return geoCache[k];
+  }
+  function withDep(name, g) { return g.dep ? name + ' (' + g.dep + ')' : name; }
+  // Locate : site Orange > adresse postale > [Ville] > "Ville :" > "Departement du X" (chef-lieu) ;
+  // sinon Teams / a distance / inconnu (non place sur la carte). Renvoie une promesse { l } ou { v }.
+  function locate(a) {
+    var txt = a.t + ' | ' + a.g + ' | ' + a.x, m, s = siteOf(a);
+    if (s) return Promise.resolve({ l: s.libelle });
+    var steps = [];
+    if ((m = RE_ADDR.exec(txt))) { var ad = m[0]; steps.push(function () { return geo(ad).then(function (g) { return g && { l: ad }; }); }); }
+    if ((m = /^\s*\[([^\]]{2,40})\]/.exec(a.t))) { var v1 = m[1]; steps.push(function () { return geo(v1, true).then(function (g) { return g && { l: withDep(g.city, g) }; }); }); }
+    if ((m = /^\s*([^:\[\]]{2,40}?)\s*:/.exec(a.t))) { var v2 = m[1].trim(); steps.push(function () { return geo(v2, true).then(function (g) { return g && { l: withDep(v2, g) }; }); }); }
+    if ((m = /Département\s+(du|de la|de l['’]|des|de)\s*([^:,.;|]+)/i.exec(txt))) {
+      var n = normA(m[2]), dn = m[2].trim();
+      var hit = Object.keys(DEPTS).filter(function (k) { return n === k || n.indexOf(k + ' ') === 0; }).sort(function (x, y) { return y.length - x.length; })[0];
+      if (hit) steps.push(function () { return geo(DEPTS[hit], true).then(function (g) { return g && { l: g.city + ' (chef-lieu, ' + dn + ')' }; }); });
+    }
+    var rest = /\bteams\b/i.test(txt) ? { v: 'teams' } : /webinaire|visio|en ligne|à distance|distanciel|téléphone|site de vote/i.test(txt) ? { v: 'distance' } : { v: 'inconnu' };
+    return steps.reduce(function (p, f) { return p.then(function (r) { return r || f(); }); }, Promise.resolve(null))
+      .then(function (r) { return r || rest; });
+  }
   var RE_ADDR = /\d{1,4}\s*(bis|ter)?,?\s+(rue|avenue|av\.|boulevard|bd|place|allée|quai|chemin|route|cours|impasse)\s[^,;|]{2,60}?,?\s\d{5}\s+[^\s,.;|]+(-[^\s,.;|]+)*/i;
   var RE_REMOTE = /\b(teams|webinaire|webinar|visio|visioconference|en ligne|a distance|distanciel|zoom|site de vote)\b/;
   var RE_PHONE = /\b(telephone|tel|audio|conference)\b.{0,60}?\b(code|id|pin)\b\s*\d/;
@@ -615,19 +696,13 @@
     h: SVG(14, '<rect x="2.5" y="4" width="19" height="12" rx="2"/><path d="M8 20h8M12 16v4"/><circle cx="12" cy="9" r="2.2"/><path d="M8.5 14a3.5 3.5 0 0 1 7 0"/>'),
     chev: SVG(16, '<path d="m9 18 6-6-6-6"/>')
   };
-  function normTxt(s) { return ' ' + fold(s).replace(/[^a-z0-9]+/g, ' ').trim() + ' '; }
-  function simLoc(a) {
-    var txt = a.t + ' | ' + a.g + ' | ' + a.x, m, i;
-    for (i = 0; i < SITES.length; i++) if (txt.indexOf(SITES[i][0]) >= 0) return SITES[i][1];
-    if ((m = RE_ADDR.exec(txt))) return m[0];
-    if ((m = /^\s*\[([^\]]{2,40})\]/.exec(a.t))) return m[1];
-    return '';
-  }
+  function normTxt(s) { return ' ' + normA(s) + ' '; }
+  // Mode : hybride / distanciel / presentiel (site Orange connu = sur place), comme le site
   function simMode(a) {
     var raw = a.t + ' | ' + a.g + ' | ' + a.x, t = normTxt(raw);
     if (/\bhybride\b/.test(t)) return 'h';
     var remote = RE_REMOTE.test(t) || RE_PHONE.test(t);
-    var phys = RE_PHYS.test(t) || RE_ADDR.test(raw) || SITES.some(function (s) { return t.indexOf(normTxt(s[0])) >= 0; });
+    var phys = RE_PHYS.test(t) || RE_ADDR.test(raw) || !!siteOf(a);
     return phys && remote ? 'h' : phys ? 'p' : remote ? 'd' : '';
   }
   function shortTime(h) {
@@ -649,20 +724,32 @@
       day = x.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
       day = day.charAt(0).toUpperCase() + day.slice(1);
     }
-    var loc = simLoc(a), mo = simMode(a);
+    var mo = simMode(a), tok = ++simTok;
     var moLbl = mo === 'd' ? (/\bteams\b/.test(normTxt(a.t + ' ' + a.g + ' ' + a.x)) ? 'Teams' : 'Distanciel') : { p: 'Présentiel', h: 'Hybride' }[mo];
     box.innerHTML = (day ? '<p class="day">' + esc(day) + '</p>' : '<p class="day muted">Date à préciser</p>') +
       '<article class="evc">' +
         '<div class="ev-top"><span class="ev-time"><span class="lg">' + esc(a.h || 'Horaire non précisé') + '</span><span class="sh">' + esc(shortTime(a.h)) + '</span></span>' +
           '<span class="src"><span class="lg">Communication email</span><span class="sh">mail</span></span></div>' +
         '<div class="ev-ttl">' + (a.t ? esc(a.t) : '<span class="muted">Titre</span>') + '</div>' +
-        '<div class="ev-meta">' + (loc ? '<span class="it">' + IC.pin + esc(loc) + '</span>' : '') +
+        '<div class="ev-meta"><span class="it" id="simLoc" hidden></span>' +
           (mo ? '<span class="it">' + IC[mo] + moLbl + '</span>' : '') +
           '<span class="ev-link">Liste de diffusion →</span></div>' +
         (a.x ? '<p class="ev-more">' + esc(a.x) + '</p>' : '') +
         '<span class="ev-chev" aria-hidden="true">' + IC.chev + '</span>' +
-      '</article>';
+      '</article><p class="muted note" id="simMap">' + (LIEUX === 'chargement' ? 'Chargement des lieux connus...' : 'Recherche du lieu...') + '</p>';
+    // Lieu : calcule apres une courte pause de frappe (geocodage en ligne comme sur le site)
+    clearTimeout(simTimer);
+    simTimer = setTimeout(function () {
+      locate(a).then(function (r) {
+        if (tok !== simTok) return;
+        var el = $('simLoc'), map = $('simMap');
+        if (r.l) { el.innerHTML = IC.pin + esc(r.l); el.hidden = false; map.textContent = 'Carte de l’agenda : placé à ' + r.l + '.'; }
+        else map.textContent = 'Carte de l’agenda : non placé (' + { teams: 'Teams', distance: 'à distance', inconnu: 'lieu non trouvé' }[r.v] + ').';
+        if (LIEUX === 'erreur') map.textContent += ' Liste des sites Orange indisponible : lieu peut-être incomplet.';
+      });
+    }, 350);
   }
+  var simTok = 0, simTimer = null;
   ['ft', 'fd', 'fh', 'fg', 'fx'].forEach(function (id) { $(id).addEventListener('input', renderSimu); });
 
   // Bouton theme clair / sombre (meme reglage que l'agenda)
@@ -697,10 +784,11 @@
   mq.addEventListener('change', function () { $('help').open = !mq.matches; placeSimu(); });
   window.addEventListener('resize', layout);
   renderSimu();
+  loadLieux();
   // Tous les liens vers GitHub ou le site s'ouvrent dans un nouvel onglet
   document.querySelectorAll('a[href^="http"]').forEach(function (a) { a.target = '_blank'; a.rel = 'noopener'; });
 
-  window.__test = { parseEml: parseEml, bytesToBin: bytesToBin, fillFromMail: fillFromMail, load: load };
+  window.__test = { parseEml: parseEml, bytesToBin: bytesToBin, fillFromMail: fillFromMail, load: load, locate: locate, simMode: simMode, siteOf: siteOf, lieux: function () { return LIEUX + ' ' + SITE_KEYS.length + ' cles, ' + Object.keys(DEPTS).length + ' departements'; } };
   loadRemote();
 })();
 </script>

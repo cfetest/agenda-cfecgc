@@ -284,7 +284,8 @@ function Mode($e) {
   if ($t -match '\bhybride\b') { return 'h' }
   $remote = ($t -match $reRemote) -or ($t -match $rePhone) -or $e.Detail.Remote
   $phys = ($t -match $rePhys) -or [regex]::IsMatch($raw, $reAddr, 'IgnoreCase')
-  if (-not $phys) { foreach ($s in $sites) { if ($t.Contains(' ' + (Norm $s.motif) + ' ')) { $phys = $true; break } } }
+  # Site Orange connu (memes regles que Locate : variantes, contexte) = present sur place
+  if (-not $phys -and (SiteOf $e)) { $phys = $true }
   if ($phys -and $remote) { return 'h' }
   if ($phys) { return 'p' }
   if ($remote) { return 'd' }
