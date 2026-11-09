@@ -712,16 +712,16 @@
     var same = r.w.filter(function (s) { return /^Déjà un rendez-vous/.test(s); });
     if (same.length && !confirm(same.join('\n') + '\n\nAjouter quand même ?')) { showForm([], r.w); return; }
     if (editing >= 0) list[editing] = a; else list.push(a);
-    var was = editing; clearForm(); render();
+    var was = editing; resetFrame1(); render();
     showForm([], r.w, (was >= 0 ? 'Rendez-vous modifié' : 'Rendez-vous ajouté') + ' : passe à l\'étape 2 pour publier.');
   };
-  // Vider : tout le cadre 1 (champs, texte du mail, messages) ; apres un ajout, seul le formulaire
-  // est vide et le texte du mail reste affiche (un mail peut annoncer plusieurs rendez-vous)
-  $('clear').onclick = function () {
-    clearForm(); showForm([], []);
+  // Remise a zero de tout le cadre 1 (champs, texte du mail, fichier) : Vider, et apres un ajout
+  function resetFrame1() {
+    clearForm();
     $('mail').textContent = 'Aucun mail chargé.'; $('mail').classList.add('muted'); $('mail').scrollTop = 0;
     $('emlFile').value = '';
-  };
+  }
+  $('clear').onclick = function () { resetFrame1(); showForm([], []); };
   $('list').onclick = function (e) {
     var b = e.target.closest('button'); if (!b) return;
     if (b.dataset.del != null) {
