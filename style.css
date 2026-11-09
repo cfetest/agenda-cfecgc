@@ -99,7 +99,9 @@
   --r-pill: 99px;
 
   /* Dimensions */
-  --page-max: 1320px;
+  /* largeur du cadre sur PC : suit l'ecran (32 px de marge de chaque cote), au moins 1320 px, au plus 1760 px.
+     Ex. portable 1920 px a 125 % = 1536 px : cadre de 1472 px au lieu de 1320 (108 px de marge avant). */
+  --page-max: min(1760px, max(1320px, calc(100vw - 64px)));
   --ctl-h: 36px;            /* champ de recherche et boutons du bandeau */
   --search-w: 260px;        /* largeur maxi de la recherche (PC), elle retrecit si la place manque */
   --logo-h: 48px;
