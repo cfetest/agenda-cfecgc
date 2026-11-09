@@ -182,9 +182,9 @@
 
 <section>
   <h2><span class="n">1</span>Ajouter ou modifier un rendez-vous</h2>
-  <div id="drop" class="drop">D&eacute;pose ici le fichier <b>.eml</b> (ou clique pour le choisir)<br>
-    <span class="muted pc">Dans Outlook&nbsp;: glisser le mail sur le bureau cr&eacute;e le fichier .eml (ou .msg&nbsp;: dans ce cas, remplis le formulaire &agrave; la main).</span>
-    <input id="emlFile" type="file" accept=".eml,message/rfc822" class="hidden"></div>
+  <div id="drop" class="drop">D&eacute;pose ici le mail <b>.msg</b> (Outlook) ou <b>.eml</b> (ou clique pour le choisir)<br>
+    <span class="muted pc">Outlook (.msg)&nbsp;: glisser le mail d'Outlook vers le bureau, puis d&eacute;poser le fichier ici. Les fichiers .eml sont aussi accept&eacute;s.</span>
+    <input id="emlFile" type="file" accept=".eml,.msg,message/rfc822,application/vnd.ms-outlook" class="hidden"></div>
   <div class="cols" style="margin-top:6px">
     <div>
       <label for="ft">Titre <span class="pc">(court et clair)</span> <span class="tag">t</span></label><input id="ft" type="text">
@@ -251,7 +251,7 @@
 
   <h3>En bref</h3>
   <ol>
-    <li>D&eacute;pose le <b>.eml</b> en <b>1</b>, relis et corrige chaque champ, puis <b>Ajouter</b></li>
+    <li>D&eacute;pose le mail (<b>.msg</b> ou <b>.eml</b>) en <b>1</b>, relis et corrige chaque champ, puis <b>Ajouter</b></li>
     <li>En <b>2</b>&nbsp;: v&eacute;rifier les changements, <b>Copier</b>, ouvrir GitHub, <span class="pc"><b>Ctrl+A</b>, <b>Ctrl+V</b></span><span class="mob"><b>tout s&eacute;lectionner</b>, <b>remplacer en collant</b></span>, <b>Commit changes</b></li>
     <li>La liste <b>3</b> montre les rendez-vous mail <b>&agrave; venir</b> (les pass&eacute;s sont ignor&eacute;s)&nbsp;: <b>Modifier</b> ou <b>Supprimer</b>, puis publier en <b>2</b></li>
   </ol>
@@ -441,11 +441,108 @@
     $('add').textContent = 'Ajouter à la liste';
     showForm([], ['Formulaire pré-rempli : relis et corrige chaque champ avant d\'ajouter.']); renderSimu();
   }
+  // ---------- Lecture d'un .msg Outlook (format binaire "Compound File", MS-CFB + MS-OXMSG) ----------
+  // Un .msg est un petit systeme de fichiers : secteurs de 512 (ou 4096) octets chaines par une table
+  // (FAT), un repertoire d'entrees de 128 octets, et les petits flux (< 4096 octets) ranges dans un
+  // "mini flux" a secteurs de 64 octets (mini FAT). Les proprietes du message sont des flux nommes
+  // __substg1.0_IIIITTTT (IIII = propriete, TTTT = type : 001F texte UTF-16, 001E texte 8 bits, 0102 binaire).
+  var CPID = { 65001: 'utf-8', 1252: 'windows-1252', 28591: 'iso-8859-1', 28605: 'iso-8859-15', 20127: 'us-ascii', 1200: 'utf-16le', 1250: 'windows-1250' };
+  function isCfb(u8) { return u8.length > 512 && u8[0] === 0xD0 && u8[1] === 0xCF && u8[2] === 0x11 && u8[3] === 0xE0 && u8[4] === 0xA1 && u8[5] === 0xB1 && u8[6] === 0x1A && u8[7] === 0xE1; }
+  function readCfb(buf) {
+    var u8 = new Uint8Array(buf), dv = new DataView(buf);
+    if (!isCfb(u8)) throw new Error('pas un fichier Outlook');
+    var u32 = function (o) { return dv.getUint32(o, true); };
+    var ss = 1 << dv.getUint16(0x1E, true), mss = 1 << dv.getUint16(0x20, true);
+    var nFat = u32(0x2C), dirStart = u32(0x30), cutoff = u32(0x38), miniFatStart = u32(0x3C), difStart = u32(0x44);
+    var END = 0xFFFFFFFE, MAXS = 0xFFFFFFFA;
+    var off = function (s) { return (s + 1) * ss; };
+    // secteurs de la FAT : 109 dans l'en-tete, puis la chaine DIFAT
+    var fatSecs = [], i, s;
+    for (i = 0; i < 109 && fatSecs.length < nFat; i++) { s = u32(0x4C + i * 4); if (s <= MAXS) fatSecs.push(s); }
+    for (s = difStart, i = 0; s <= MAXS && fatSecs.length < nFat && i < 10000; i++) {
+      var per = ss / 4 - 1;
+      for (var k = 0; k < per && fatSecs.length < nFat; k++) { var v = u32(off(s) + k * 4); if (v <= MAXS) fatSecs.push(v); }
+      s = u32(off(s) + per * 4);
+    }
+    var fat = [];
+    fatSecs.forEach(function (fs) { for (var k = 0; k < ss / 4; k++) fat.push(u32(off(fs) + k * 4)); });
+    var chain = function (start, table) { var out = [], n = start, guard = 0; while (n <= MAXS && n < table.length && guard++ < 1e6) { out.push(n); n = table[n]; } return out; };
+    var readChain = function (start, size) {
+      var secs = chain(start, fat), res = new Uint8Array(secs.length * ss);
+      secs.forEach(function (sec, j) { res.set(u8.subarray(off(sec), off(sec) + ss), j * ss); });
+      return size == null ? res : res.subarray(0, size);
+    };
+    // repertoire
+    var dirBytes = readChain(dirStart), entries = [];
+    for (i = 0; i + 128 <= dirBytes.length; i += 128) {
+      var e = new DataView(dirBytes.buffer, dirBytes.byteOffset + i, 128), nl = e.getUint16(64, true), type = e.getUint8(66);
+      var name = nl > 2 ? new TextDecoder('utf-16le').decode(dirBytes.subarray(i, i + nl - 2)) : '';
+      entries.push({ name: name, type: type, left: e.getUint32(68, true), right: e.getUint32(72, true), child: e.getUint32(76, true),
+                     start: e.getUint32(116, true), size: e.getUint32(120, true) });
+    }
+    var root = entries[0];
+    if (!root || root.type !== 5) throw new Error('repertoire illisible');
+    var mini = readChain(root.start, root.size);
+    var miniFat = [];
+    chain(miniFatStart, fat).forEach(function (fs) { for (var k = 0; k < ss / 4; k++) miniFat.push(u32(off(fs) + k * 4)); });
+    var readStream = function (en) {
+      if (en.size >= cutoff) return readChain(en.start, en.size);
+      var secs = chain(en.start, miniFat), res = new Uint8Array(secs.length * mss);
+      secs.forEach(function (sec, j) { res.set(mini.subarray(sec * mss, sec * mss + mss), j * mss); });
+      return res.subarray(0, en.size);
+    };
+    // flux de premier niveau (enfants de la racine : arbre gauche / droite)
+    var top = {}, stack = [root.child], seen = {};
+    while (stack.length) {
+      var id = stack.pop();
+      if (id > MAXS || id >= entries.length || seen[id]) continue;
+      seen[id] = 1; var en = entries[id];
+      if (en.type === 2) top[en.name] = en;
+      stack.push(en.left, en.right);
+    }
+    return { has: function (n) { return !!top[n]; }, get: function (n) { return top[n] ? readStream(top[n]) : null; } };
+  }
+  function parseMsg(buf) {
+    var cf = readCfb(buf), cpid = 0;
+    // page de code du texte 8 bits / HTML : PR_INTERNET_CPID (3FDE), sinon PR_MESSAGE_CODEPAGE (3FFD)
+    var props = cf.get('__properties_version1.0');
+    if (props) {
+      var dv = new DataView(props.buffer, props.byteOffset, props.byteLength);
+      for (var o = 32; o + 16 <= props.length; o += 16) {
+        var tag = dv.getUint32(o, true), pid = tag >>> 16;
+        if ((tag & 0xFFFF) === 0x0003 && (pid === 0x3FDE || (pid === 0x3FFD && !cpid))) cpid = dv.getUint32(o + 8, true);
+      }
+    }
+    var cs = CPID[cpid] || 'windows-1252';
+    var dec = function (bytes, label) { try { return new TextDecoder(label).decode(bytes); } catch (e) { return new TextDecoder('windows-1252').decode(bytes); } };
+    var str = function (id) {
+      var u = cf.get('__substg1.0_' + id + '001F');
+      if (u) return dec(u, 'utf-16le').replace(/\u0000+$/, '');
+      var a = cf.get('__substg1.0_' + id + '001E');
+      return a ? dec(a, cs).replace(/\u0000+$/, '') : '';
+    };
+    var subject = str('0037'), body = str('1000'), html = '';
+    if (!body) {
+      var hb = cf.get('__substg1.0_10130102');
+      html = hb ? dec(hb, cs) : str('1013');
+    }
+    var text = body || (html ? htmlToText(html) : '');
+    text = text.replace(/\r/g, '').replace(/ /g, ' ').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+    return { subject: subject.replace(/\s+/g, ' ').trim(), text: text };
+  }
+
   function readEml(file) {
     if (!file) return;
-    if (/\.msg$/i.test(file.name)) { showForm(['Fichier .msg (format Outlook) non lisible : enregistre le mail en .eml, ou remplis le formulaire à la main.'], []); return; }
     var r = new FileReader();
-    r.onload = function () { fillFromMail(parseEml(bytesToBin(r.result))); };
+    r.onload = function () {
+      var u8 = new Uint8Array(r.result);
+      try {
+        // .msg d'Outlook (reconnu a sa signature, quel que soit le nom du fichier), sinon .eml
+        fillFromMail(isCfb(u8) ? parseMsg(r.result) : parseEml(bytesToBin(r.result)));
+      } catch (e) {
+        showForm(['Mail illisible (' + e.message + ') : remplis le formulaire à la main.'], []);
+      }
+    };
     r.readAsArrayBuffer(file);
   }
 
@@ -718,7 +815,7 @@
   function renderSimu() {
     var a = formVal(), box = $('simuBody');
     if (!a.t && !a.d && !a.h && !a.g && !a.x) {
-      box.innerHTML = '<div class="ev-empty">Remplis le formulaire ou dépose un .eml&nbsp;: la carte apparaît ici.</div>';
+      box.innerHTML = '<div class="ev-empty">Remplis le formulaire ou dépose un mail&nbsp;: la carte apparaît ici.</div>';
       return;
     }
     var day = '';
@@ -791,7 +888,7 @@
   // Tous les liens vers GitHub ou le site s'ouvrent dans un nouvel onglet
   document.querySelectorAll('a[href^="http"]').forEach(function (a) { a.target = '_blank'; a.rel = 'noopener'; });
 
-  window.__test = { parseEml: parseEml, bytesToBin: bytesToBin, fillFromMail: fillFromMail, load: load, locate: locate, simMode: simMode, siteOf: siteOf, lieux: function () { return LIEUX + ' ' + SITE_KEYS.length + ' cles, ' + Object.keys(DEPTS).length + ' departements'; } };
+  window.__test = { parseEml: parseEml, bytesToBin: bytesToBin, fillFromMail: fillFromMail, load: load, parseMsg: parseMsg, locate: locate, simMode: simMode, siteOf: siteOf, lieux: function () { return LIEUX + ' ' + SITE_KEYS.length + ' cles, ' + Object.keys(DEPTS).length + ' departements'; } };
   loadRemote();
 })();
 </script>
