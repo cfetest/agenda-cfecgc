@@ -314,14 +314,12 @@
     return [].some.call(chipsEl.querySelectorAll('.chip'), function (c) { return c.scrollWidth > c.clientWidth + 1; });
   }
   function renderJour() {
-    // jours ouvres avec rendez-vous (selon filtres et recherche), aujourd'hui toujours present
+    // jours ouvres avec rendez-vous (selon filtres et recherche), a partir d'aujourd'hui ;
+    // aujourd'hui sans rendez-vous n'apparait pas, sauf s'il n'y a aucun rendez-vous du tout
+    // (il porte alors le message "Aucun evenement n'est encore prevu aujourd'hui.")
     jDates = Object.keys(BYDAY).filter(function (d) { return weekday(d) && d >= TODAY; });
-    if (weekday(TODAY) && jDates.indexOf(TODAY) < 0) jDates.push(TODAY);
+    if (!jDates.length) jDates.push(TODAY);
     jDates.sort();
-    if (!jDates.length) {
-      S.dJour = null; chipsEl.innerHTML = ''; planEl.innerHTML = planHtml([], null);
-      $('prev').disabled = $('next').disabled = true; return;
-    }
     if (!S.dJour || jDates.indexOf(S.dJour) < 0) {
       var want = S.dJour && S.dJour > TODAY ? S.dJour : TODAY;
       S.dJour = jDates.filter(function (d) { return d >= want; })[0] || jDates[jDates.length - 1];
