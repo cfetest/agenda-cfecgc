@@ -253,6 +253,9 @@ a:focus-visible, button:focus-visible, select:focus-visible, [tabindex]:focus-vi
    colonne gauche (au moins --cols-min-h) ; la colonne droite defile seule. */
 .cols { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: var(--col-gap);
         min-height: var(--cols-min-h); padding: var(--sp-9) var(--sp-10) var(--sp-10); }
+/* Tres grands ecrans (1536 px et plus) : colonne gauche plus etroite (36 % au lieu de 40 %), la liste
+   des rendez-vous gagne la place. 36 % garde 5 jours dans le semainier a 1536 px (34 % : 4 seulement). */
+@media (min-width: 1536px) { .cols { grid-template-columns: minmax(0, 36fr) minmax(0, 64fr); } }
 .col { min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); }
 .col-left { padding: var(--sp-8); }
 .col-right { position: relative; }
