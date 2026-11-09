@@ -347,9 +347,12 @@
       });
       return out;
     }
-    if (/attachment/i.test(p.h['content-disposition'] || '')) return out;
+    // invitation agenda (Teams / Outlook / Google) : partie text/calendar, ou piece jointe .ics
+    var ics = type === 'text/calendar' || type === 'application/ics' || /\.ics"?\s*$/i.test(param(p.h['content-disposition'], 'filename'));
+    if (ics) type = 'text/calendar';
+    else if (/attachment/i.test(p.h['content-disposition'] || '')) return out;
     if (type === 'message/rfc822') return parts(p.body, out);
-    if (type !== 'text/plain' && type !== 'text/html') return out;
+    if (type !== 'text/plain' && type !== 'text/html' && type !== 'text/calendar') return out;
     var enc = (p.h['content-transfer-encoding'] || '').toLowerCase(), bin = p.body;
     if (enc === 'base64') bin = b64(bin); else if (enc === 'quoted-printable') bin = qp(bin);
     out.push({ type: type, text: decodeBytes(bin, param(ct, 'charset')) });
@@ -366,7 +369,45 @@
     var html = ps.filter(function (p) { return p.type === 'text/html'; })[0];
     var text = plain ? plain.text : html ? htmlToText(html.text) : '';
     text = text.replace(/\r/g, '').replace(/ /g, ' ').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
-    return { subject: decodeWords(top.h.subject || '').replace(/\s+/g, ' ').trim(), text: text };
+    var cal = ps.filter(function (p) { return p.type === 'text/calendar'; })[0];
+    return { subject: decodeWords(top.h.subject || '').replace(/\s+/g, ' ').trim(), text: text, ev: cal ? icsEvent(cal.text) : null };
+  }
+
+  // ---------- Invitation agenda : date, heures et lieu exacts ----------
+  // Heure "Z" (UTC) ou date systeme Outlook convertie en heure de Paris ; heure avec TZID = heure locale.
+  var fParis = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit',
+                                                  hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  function paris(date) {
+    var o = {}; fParis.formatToParts(date).forEach(function (p) { o[p.type] = p.value; });
+    return { d: o.year + '-' + o.month + '-' + o.day, hm: o.hour + 'h' + o.minute };
+  }
+  function evFromDates(s, e, allDay) {
+    // s, e : { d: 'AAAA-MM-JJ', hm: 'HHhMM' ou '' }
+    if (!s || !s.d) return null;
+    var h = '';
+    if (!allDay && s.hm) h = s.hm + (e && e.hm && e.d === s.d && e.hm !== s.hm ? ' - ' + e.hm : '');
+    return { d: s.d, h: h, end: e && e.d && e.d !== s.d && !allDay ? e.d : '' };
+  }
+  function icsEvent(text) {
+    var t = String(text).replace(/\r\n?/g, '\n').replace(/\n[ \t]/g, '');   // lignes repliees
+    var v = /BEGIN:VEVENT\n([\s\S]*?)END:VEVENT/.exec(t); if (!v) return null;
+    var body = v[1];
+    var when = function (name) {
+      var m = new RegExp('^' + name + '((?:;[^:\\n]*)?):(\\d{4})(\\d{2})(\\d{2})(?:T(\\d{2})(\\d{2})(\\d{2})(Z)?)?', 'm').exec(body);
+      if (!m) return null;
+      if (!m[5]) return { d: m[2] + '-' + m[3] + '-' + m[4], hm: '', allDay: true };
+      if (m[8]) return paris(new Date(Date.UTC(+m[2], m[3] - 1, +m[4], +m[5], +m[6], +m[7])));
+      return { d: m[2] + '-' + m[3] + '-' + m[4], hm: m[5] + 'h' + m[6] };
+    };
+    var field = function (name) { var m = new RegExp('^' + name + '(?:;[^:\\n]*)?:(.*)$', 'm').exec(body); return m ? m[1].replace(/\\([,;nN\\])/g, function (x, c) { return c === 'n' || c === 'N' ? ' ' : c; }).trim() : ''; };
+    var s = when('DTSTART'), e = when('DTEND');
+    var r = evFromDates(s, e, s && s.allDay);
+    if (r && s.allDay && e && e.d) {   // journee entiere : DTEND est le lendemain du dernier jour
+      var last = new Date(e.d + 'T12:00:00'); last.setDate(last.getDate() - 1);
+      if (iso(last) > s.d) r.end = iso(last);
+    }
+    if (r) { r.loc = field('LOCATION'); r.summary = field('SUMMARY'); }
+    return r;
   }
 
   // ---------- Pre-remplissage (a relire : ce ne sont que des suggestions) ----------
@@ -374,7 +415,9 @@
   function bodyLines(text) { return text.split('\n').filter(function (l) { return !RE_HEADLINE.test(l); }); }
   function cleanTitle(s) {
     var t = s, prev;
-    do { prev = t; t = t.replace(/^\s*(fw|fwd|tr|re|rép|rep|ref)\s*:\s*/i, ''); } while (t !== prev);
+    // Fw:, TR:, RE: et etiquettes de liste en majuscules ("[INFOS-ADHERENTS]") ; une ville entre
+    // crochets ("[Saint Avé]", minuscules) est gardee : le site s'en sert pour la carte
+    do { prev = t; t = t.replace(/^\s*(fw|fwd|tr|re|rép|rep|ref)\s*:\s*/i, '').replace(/^\s*\[[A-Z0-9ÉÈÊÀÇ _.-]{3,}\]\s*/, ''); } while (t !== prev);
     t = t.replace(/^\s*invitation\s*[:\-–—]\s*/i, '').replace(/\s*[–—]\s*/g, ' - ').replace(/[«»"]/g, '').replace(/\s+_\s*/g, ' ').trim();
     return t.replace(/\s+/g, ' ');
   }
@@ -434,10 +477,17 @@
     $('mail').classList.remove('muted');
     editing = -1;
     $('ft').value = cleanTitle(m.subject);
-    $('fd').value = findDate(m.subject) || findDate(dtext) || findDate(body);
-    $('fh').value = findTime(m.subject) || findTime(dtext) || findTime(body);
-    $('fg').value = findPlace(cleanTitle(m.subject), dtext);
-    $('fx').value = summary(deep) || summary(lines);
+    var ev = m.ev, loc = ev && ev.loc ? ev.loc : '';
+    // invitation agenda : date et heures exactes, prioritaires sur ce que l'on devine dans le texte
+    $('fd').value = (ev && ev.d) || findDate(m.subject) || findDate(dtext) || findDate(body);
+    $('fh').value = ev ? ev.h : (findTime(m.subject) || findTime(dtext) || findTime(body));
+    $('fg').value = findPlace(cleanTitle(m.subject), dtext + '\n' + loc);
+    var x = summary(deep) || summary(lines);
+    // lieu de l'invitation (adresse, salle) ou reunion Teams : utile au site pour la carte et le mode
+    if (loc && !/teams/i.test(loc) && !/https?:|@/.test(loc) && fold(x).indexOf(fold(loc)) < 0) x = (x ? x + ' ' : '') + 'Lieu : ' + loc + '.';
+    if (/teams/i.test(loc) && !/teams/i.test(x)) x = (x ? x + ' ' : '') + 'Réunion via Teams.';
+    if (ev && ev.end) x = (x ? x + ' ' : '') + 'Jusqu’au ' + new Date(ev.end + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) + '.';
+    $('fx').value = x;
     $('add').textContent = 'Ajouter à la liste';
     showForm([], ['Formulaire pré-rempli : relis et corrige chaque champ avant d\'ajouter.']); renderSimu();
   }
@@ -503,7 +553,9 @@
     return { has: function (n) { return !!top[n]; }, get: function (n) { return top[n] ? readStream(top[n]) : null; } };
   }
   function parseMsg(buf) {
-    var cf = readCfb(buf), cpid = 0;
+    var cf = readCfb(buf), cpid = 0, tStart = null, tEnd = null;
+    // date systeme Outlook (FILETIME : centaines de ns depuis 1601) -> Date
+    var ft = function (dv, o) { var ms = (dv.getUint32(o + 4, true) * 4294967296 + dv.getUint32(o, true)) / 1e4 - 11644473600000; return ms > 0 ? new Date(ms) : null; };
     // page de code du texte 8 bits / HTML : PR_INTERNET_CPID (3FDE), sinon PR_MESSAGE_CODEPAGE (3FFD)
     var props = cf.get('__properties_version1.0');
     if (props) {
@@ -511,6 +563,9 @@
       for (var o = 32; o + 16 <= props.length; o += 16) {
         var tag = dv.getUint32(o, true), pid = tag >>> 16;
         if ((tag & 0xFFFF) === 0x0003 && (pid === 0x3FDE || (pid === 0x3FFD && !cpid))) cpid = dv.getUint32(o + 8, true);
+        // invitation (demande de reunion) : PidTagStartDate 0060 / PidTagEndDate 0061
+        if ((tag & 0xFFFF) === 0x0040 && pid === 0x0060) tStart = ft(dv, o + 8);
+        if ((tag & 0xFFFF) === 0x0040 && pid === 0x0061) tEnd = ft(dv, o + 8);
       }
     }
     var cs = CPID[cpid] || 'windows-1252';
@@ -528,7 +583,8 @@
     }
     var text = body || (html ? htmlToText(html) : '');
     text = text.replace(/\r/g, '').replace(/ /g, ' ').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
-    return { subject: subject.replace(/\s+/g, ' ').trim(), text: text };
+    var ev = tStart ? evFromDates(paris(tStart), tEnd ? paris(tEnd) : null, false) : null;
+    return { subject: subject.replace(/\s+/g, ' ').trim(), text: text, ev: ev };
   }
 
   function readEml(file) {
@@ -659,7 +715,13 @@
     var was = editing; clearForm(); render();
     showForm([], r.w, (was >= 0 ? 'Rendez-vous modifié' : 'Rendez-vous ajouté') + ' : passe à l\'étape 2 pour publier.');
   };
-  $('clear').onclick = function () { clearForm(); showForm([], []); };
+  // Vider : tout le cadre 1 (champs, texte du mail, messages) ; apres un ajout, seul le formulaire
+  // est vide et le texte du mail reste affiche (un mail peut annoncer plusieurs rendez-vous)
+  $('clear').onclick = function () {
+    clearForm(); showForm([], []);
+    $('mail').textContent = 'Aucun mail chargé.'; $('mail').classList.add('muted'); $('mail').scrollTop = 0;
+    $('emlFile').value = '';
+  };
   $('list').onclick = function (e) {
     var b = e.target.closest('button'); if (!b) return;
     if (b.dataset.del != null) {
