@@ -329,9 +329,16 @@
     planEl.innerHTML = planHtml(BYDAY[S.dJour] || [], S.dJour);
     fitDurations();
   }
-  // Duree dans un bloc de la frise : seulement si elle tient en largeur (sinon bloc sans texte)
+  // Duree dans un bloc de la frise : seulement si elle tient en largeur, avec une marge (la police du
+  // telephone peut etre plus large que celle mesuree). Si un bloc d'un groupe de rendez-vous simultanes
+  // n'a pas de place pour sa duree, aucun bloc du groupe ne l'affiche (sinon certains en ont, d'autres pas).
   function fitDurations() {
-    each('.pblk > span', function (s) { if (s.scrollWidth > s.parentNode.clientWidth - 2) s.remove(); }, planEl);
+    var bad = {};
+    each('.pblk', function (b) {
+      var s = b.firstElementChild;
+      if (!s || s.scrollWidth > b.clientWidth - 6) bad[b.getAttribute('data-g')] = 1;
+    }, planEl);
+    each('.pblk > span', function (s) { if (bad[s.parentNode.getAttribute('data-g')]) s.remove(); }, planEl);
   }
   function jourPage(step) {
     var page = Math.floor(jDates.indexOf(S.dJour) / jPer) + step;
@@ -361,9 +368,9 @@
       blocks.push({ e: e, s: s, f: Math.max(Math.min(f, H1), s + minH) });
     });
     blocks.sort(function (a, b) { return a.s - b.s || b.f - a.f; });
-    var cur = null, end = -1;
+    var cur = null, end = -1, ng = 0;
     blocks.forEach(function (b) {
-      if (!cur || b.s >= end - 1e-6) { cur = { lanes: [] }; end = b.f; } else end = Math.max(end, b.f);
+      if (!cur || b.s >= end - 1e-6) { cur = { lanes: [], id: ng++ }; end = b.f; } else end = Math.max(end, b.f);
       var l = 0;
       while (l < cur.lanes.length && cur.lanes[l] > b.s + 1e-6) l++;
       cur.lanes[l] = b.f; b.lane = l; b.grp = cur;
@@ -377,7 +384,7 @@
       var lbl = e.dur || (e.s != null ? pad(Math.floor(e.s)) + 'h' + pad(Math.round((e.s % 1) * 60)) : '');
       var txt = ht >= (MOBILE.matches ? 18 : 16) && lbl && !(MOBILE.matches && n >= 5) ? '<span>' + lbl + '</span>' : '';
       h += '<div class="pblk' + (n > 5 ? ' tight' : '') + (ended(e) ? ' ended' : '') + (S.sel === e.id ? ' sel' : '') + '" role="button" tabindex="0"'
-        + ' data-id="' + e.id + '" aria-label="' + esc(e.t + ', ' + (e.h || '')) + '"'
+        + ' data-id="' + e.id + '" data-g="' + b.grp.id + '" aria-label="' + esc(e.t + ', ' + (e.h || '')) + '"'
         + ' style="--ev:' + e.c + ';top:' + top + 'px;height:' + ht + 'px;left:calc(' + (100 * b.lane / n) + '% + 2px);width:calc(' + (100 / n) + '% - 4px)">' + txt + '</div>';
     });
     if (day === TODAY) {
@@ -824,6 +831,8 @@
       if (map && S.tab === 'carte') map.invalidateSize();
     }, 120);
   });
+  // Police chargee apres le premier rendu : on remesure les durees de la frise
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (S.tab === 'jour') renderJour(); });
   // Rechargement toutes les 15 min (nouvelles donnees), seulement si la page est inactive depuis 1 min
   // et le panneau Filtres ferme ; l'onglet, les dates, le lieu et la recherche sont conserves.
   var t0 = Date.now(), act = Date.now();
